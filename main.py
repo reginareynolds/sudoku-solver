@@ -59,4 +59,18 @@ for cell in cells:
             box = box-3
 
     squares.append(sq)
-    
+
+# Create text representation of puzzle
+with open("puzzle.txt", "w") as file:
+    x = 0
+    for square in squares:
+        if(square.solution):
+            file.write(str(square.solution))
+        else:
+            file.write("x")
+        
+        if square.column == 8:
+            if square.row < 8:
+                file.write("\n")
+
+
