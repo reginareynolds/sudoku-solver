@@ -4,12 +4,18 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
 
+class Puzzle():
+    def __init__(self):
+        self.rows = {}
+        self.columns = {}
+        self.boxes = {}
+
 class Square():
     def __init__(self):
         self.row = None
         self.column = None
         self.box = None
-        self.possible_solutions = []
+        self.possible_solutions = [1, 2, 3, 4, 5, 6, 7, 8, 9]
         self.solution = None
 
 # Rows will range in value from 0-8
@@ -26,10 +32,10 @@ squares = []
 
 # Wait for page load
 try:
-    puzzle = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CLASS_NAME, "su-board")))
+    page = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CLASS_NAME, "su-board")))
 finally:
     # Get squares
-    cells = puzzle.find_elements(By.CLASS_NAME, "su-cell")
+    cells = page.find_elements(By.CLASS_NAME, "su-cell")
 
 row = 0
 column = 0
@@ -73,4 +79,26 @@ with open("puzzle.txt", "w") as file:
             if square.row < 8:
                 file.write("\n")
 
+puzzle = Puzzle()
 
+loop = 0
+# Add squares to puzzle class
+while loop < 9:
+    row = []
+    column = []
+    box = []
+    for square in squares:
+        if square.row == loop:
+            row.append(square)
+
+        if square.column == loop:
+            column.append(square)
+
+        if square.box == loop:
+            box.append(square)
+
+    puzzle.rows[str(loop)] = row
+    puzzle.columns[str(loop)] = column
+    puzzle.boxes[str(loop)] = box
+
+    loop = loop + 1
