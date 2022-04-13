@@ -155,3 +155,15 @@ for cell in solved:
                     square.possible_solutions = int(square.possible_solutions[0])
                     solved.append(square)
 
+
+# Create text representation of puzzle solution
+with open("solution.txt", "w") as file:
+    for square in squares:
+        if(square.solution):
+            file.write(str(square.solution))
+        else:
+            file.write("x")
+        
+        if square.column == 8:
+            if square.row < 8:
+                file.write("\n")
