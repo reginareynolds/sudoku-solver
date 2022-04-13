@@ -29,6 +29,7 @@ driver = webdriver.Chrome(ChromeDriverManager().install())
 driver.get("https://www.nytimes.com/puzzles/sudoku/easy")
 
 squares = []
+solved = []  # List of solved cells
 
 # Wait for page load
 try:
@@ -50,7 +51,9 @@ for cell in cells:
     # Find prefilled squares
     if cell.accessible_name != "empty":
         sq.solution = int(cell.accessible_name)
-        sq.possible_solutions.append(int(cell.accessible_name))
+        sq.possible_solutions = int(cell.accessible_name) #.append(int(cell.accessible_name))
+
+        solved.append(sq)
 
     # Increment location values as necessary
     if not (column+1)%3:
@@ -102,3 +105,53 @@ while loop < 9:
     puzzle.boxes[str(loop)] = box
 
     loop = loop + 1
+# Remove solved cell values from potential solutions of cells in the same row/column/box
+for cell in solved:
+    # Same row
+    for square in puzzle.rows[str(cell.row)]:
+        # Ignore solved squares
+        if not square.solution:
+            try:
+                square.possible_solutions.remove(cell.solution)
+            # ValueError means cell.solution was already removed
+            except ValueError:
+                pass
+            finally:
+                # Add newly solved squares to solved square list
+                if len(square.possible_solutions) == 1:
+                    square.solution = int(square.possible_solutions[0])
+                    square.possible_solutions = int(square.possible_solutions[0])
+                    solved.append(square)
+
+    # Same column
+    for square in puzzle.columns[str(cell.column)]:
+        # Ignore solved squares
+        if not square.solution:
+            try:
+                square.possible_solutions.remove(cell.solution)
+            # ValueError means cell.solution was already removed
+            except ValueError:
+                pass
+            finally:
+                # Add newly solved squares to solved square list
+                if len(square.possible_solutions) == 1:
+                    square.solution = int(square.possible_solutions[0])
+                    square.possible_solutions = int(square.possible_solutions[0])
+                    solved.append(square)
+
+    # Same box
+    for square in puzzle.boxes[str(cell.box)]:
+        # Ignore solved squares
+        if not square.solution:
+            try:
+                square.possible_solutions.remove(cell.solution)
+            # ValueError means cell.solution was already removed
+            except ValueError:
+                pass
+            finally:
+                # Add newly solved squares to solved square list
+                if len(square.possible_solutions) == 1:
+                    square.solution = int(square.possible_solutions[0])
+                    square.possible_solutions = int(square.possible_solutions[0])
+                    solved.append(square)
+
