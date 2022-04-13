@@ -18,6 +18,19 @@ class Square():
         self.possible_solutions = [1, 2, 3, 4, 5, 6, 7, 8, 9]
         self.solution = None
 
+# Create text representation of puzzle/solution and write to passed file
+def file_create(filename, cells):
+    with open(filename, "w") as file:
+        for cell in cells:
+            if(cell.solution):
+                file.write(str(cell.solution))
+            else:
+                file.write("x")
+            
+            if cell.column == 8:
+                if cell.row < 8:
+                    file.write("\n")
+
 # Rows will range in value from 0-8
 # Columns will range in value from 0-8
 # Boxes will range in value from 0-8
@@ -69,15 +82,8 @@ for cell in cells:
 
     squares.append(sq)
 
-# Create text representation of puzzle
-with open("puzzle.txt", "w") as file:
-    x = 0
-    for square in squares:
-        if(square.solution):
-            file.write(str(square.solution))
-        else:
-            file.write("x")
-        
+# Create puzzle text file
+file_create("puzzle.txt", squares)
         if square.column == 8:
             if square.row < 8:
                 file.write("\n")
@@ -155,6 +161,8 @@ for cell in solved:
                     square.possible_solutions = int(square.possible_solutions[0])
                     solved.append(square)
 
+# Create puzzle solution text file
+file_create("solution.txt", squares)
 
 # Create text representation of puzzle solution
 with open("solution.txt", "w") as file:
