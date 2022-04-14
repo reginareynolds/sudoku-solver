@@ -31,6 +31,7 @@ def file_create(filename, cells):
                 if cell.row < 8:
                     file.write("\n")
 
+
 # Rows will range in value from 0-8
 # Columns will range in value from 0-8
 # Boxes will range in value from 0-8
@@ -64,7 +65,7 @@ for cell in cells:
     # Find prefilled squares
     if cell.accessible_name != "empty":
         sq.solution = int(cell.accessible_name)
-        sq.possible_solutions = int(cell.accessible_name) #.append(int(cell.accessible_name))
+        sq.possible_solutions = int(cell.accessible_name)
 
         solved.append(sq)
 
@@ -84,14 +85,10 @@ for cell in cells:
 
 # Create puzzle text file
 file_create("puzzle.txt", squares)
-        if square.column == 8:
-            if square.row < 8:
-                file.write("\n")
 
-puzzle = Puzzle()
-
-loop = 0
 # Add squares to puzzle class
+puzzle = Puzzle()
+loop = 0
 while loop < 9:
     row = []
     column = []
@@ -111,6 +108,7 @@ while loop < 9:
     puzzle.boxes[str(loop)] = box
 
     loop = loop + 1
+
 # Remove solved cell values from potential solutions of cells in the same row/column/box
 for cell in solved:
     # Same row
@@ -163,15 +161,3 @@ for cell in solved:
 
 # Create puzzle solution text file
 file_create("solution.txt", squares)
-
-# Create text representation of puzzle solution
-with open("solution.txt", "w") as file:
-    for square in squares:
-        if(square.solution):
-            file.write(str(square.solution))
-        else:
-            file.write("x")
-        
-        if square.column == 8:
-            if square.row < 8:
-                file.write("\n")
