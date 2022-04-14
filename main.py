@@ -31,6 +31,23 @@ def file_create(filename, cells):
                 if cell.row < 8:
                     file.write("\n")
 
+# Remove solved cell values from potential solutions of cells in same grouping
+def remove_same(grouping, index, solution, solved_list):
+    for square in grouping[str(index)]:
+        # Ignore solved squares
+        if not square.solution:
+            try:
+                square.possible_solutions.remove(solution)
+            # ValueError means solution was already removed
+            except ValueError:
+                pass
+            finally:
+                # Add newly solved squares to solved square list
+                if len(square.possible_solutions) == 1:
+                    square.solution = int(square.possible_solutions[0])
+                    square.possible_solutions = int(square.possible_solutions[0])
+                    solved_list.append(square)
+
 
 # Rows will range in value from 0-8
 # Columns will range in value from 0-8
@@ -112,52 +129,13 @@ while loop < 9:
 # Remove solved cell values from potential solutions of cells in the same row/column/box
 for cell in solved:
     # Same row
-    for square in puzzle.rows[str(cell.row)]:
-        # Ignore solved squares
-        if not square.solution:
-            try:
-                square.possible_solutions.remove(cell.solution)
-            # ValueError means cell.solution was already removed
-            except ValueError:
-                pass
-            finally:
-                # Add newly solved squares to solved square list
-                if len(square.possible_solutions) == 1:
-                    square.solution = int(square.possible_solutions[0])
-                    square.possible_solutions = int(square.possible_solutions[0])
-                    solved.append(square)
+    remove_same(puzzle.rows, cell.row, cell.solution, solved)
 
     # Same column
-    for square in puzzle.columns[str(cell.column)]:
-        # Ignore solved squares
-        if not square.solution:
-            try:
-                square.possible_solutions.remove(cell.solution)
-            # ValueError means cell.solution was already removed
-            except ValueError:
-                pass
-            finally:
-                # Add newly solved squares to solved square list
-                if len(square.possible_solutions) == 1:
-                    square.solution = int(square.possible_solutions[0])
-                    square.possible_solutions = int(square.possible_solutions[0])
-                    solved.append(square)
+    remove_same(puzzle.columns, cell.column, cell.solution, solved)
 
     # Same box
-    for square in puzzle.boxes[str(cell.box)]:
-        # Ignore solved squares
-        if not square.solution:
-            try:
-                square.possible_solutions.remove(cell.solution)
-            # ValueError means cell.solution was already removed
-            except ValueError:
-                pass
-            finally:
-                # Add newly solved squares to solved square list
-                if len(square.possible_solutions) == 1:
-                    square.solution = int(square.possible_solutions[0])
-                    square.possible_solutions = int(square.possible_solutions[0])
-                    solved.append(square)
+    remove_same(puzzle.boxes, cell.box, cell.solution, solved)
 
 # Create puzzle solution text file
 file_create("solution.txt", squares)
