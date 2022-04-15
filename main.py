@@ -33,9 +33,17 @@ def file_create(filename, cells):
 
 # Remove solved cell values from potential solutions of cells in same grouping
 def remove_same(grouping, index, solution, solved_list):
-    for square in grouping[str(index)]:
+    # Remove solved cell values from grouping's unsolved value list
+    try:
+        grouping[str(index)]["unsolved"].remove(solution)
+    # ValueError means solution was already removed
+    except ValueError:
+        pass
+    
+    for square in grouping[str(index)]["squares"]:
         # Ignore solved squares
         if not square.solution:
+            # Remove solved cell values from square's potential value list
             try:
                 square.possible_solutions.remove(solution)
             # ValueError means solution was already removed
@@ -107,18 +115,18 @@ file_create("puzzle.txt", squares)
 puzzle = Puzzle()
 loop = 0
 while loop < 9:
-    row = []
-    column = []
-    box = []
+    row = {"squares": [], "unsolved": [1, 2, 3, 4, 5, 6, 7, 8, 9]}
+    column = {"squares": [], "unsolved": [1, 2, 3, 4, 5, 6, 7, 8, 9]}
+    box = {"squares": [], "unsolved": [1, 2, 3, 4, 5, 6, 7, 8, 9]}
     for square in squares:
         if square.row == loop:
-            row.append(square)
+            row["squares"].append(square)
 
         if square.column == loop:
-            column.append(square)
+            column["squares"].append(square)
 
         if square.box == loop:
-            box.append(square)
+            box["squares"].append(square)
 
     puzzle.rows[str(loop)] = row
     puzzle.columns[str(loop)] = column
