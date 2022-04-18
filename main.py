@@ -12,6 +12,7 @@ class Puzzle():
 
 class Square():
     def __init__(self):
+        self.ID = None
         self.row = None
         self.column = None
         self.box = None
@@ -61,7 +62,9 @@ def remove_same(grouping, index, solution, solved_list):
 # Columns will range in value from 0-8
 # Boxes will range in value from 0-8
 
-# Possible square solutions will depend on other squares in the same column, row, and box
+# Possible square solutions will depend on other squares in the same row, column, and box
+# Solved cells remove their solution as a possibility from unsolved cells in the same row/column/box
+# If the puzzle is still not solved at that point, further processing is necessary.
 
 # Generate puzzle by scraping NYT sudoku puzzle
 driver = webdriver.Chrome(ChromeDriverManager().install())
@@ -77,12 +80,14 @@ finally:
     # Get squares
     cells = page.find_elements(By.CLASS_NAME, "su-cell")
 
+number = 0
 row = 0
 column = 0
 box = 0
 # Parse puzzle
 for cell in cells:
     sq = Square()
+    sq.ID = number
     sq.row = row
     sq.column = column
     sq.box = box
@@ -106,6 +111,7 @@ for cell in cells:
         if row%3:
             box = box-3
 
+    number = number + 1
     squares.append(sq)
 
 # Create puzzle text file
@@ -134,16 +140,71 @@ while loop < 9:
 
     loop = loop + 1
 
-# Remove solved cell values from potential solutions of cells in the same row/column/box
-for cell in solved:
-    # Same row
-    remove_same(puzzle.rows, cell.row, cell.solution, solved)
+# Check for if puzzle is solved
+while len(solved) < 81:
+    # Remove solved cell values from potential solutions of cells in the same row/column/box
+    for cell in solved:
+        # Same row
+        remove_same(puzzle.rows, cell.row, cell.solution, solved)
 
-    # Same column
-    remove_same(puzzle.columns, cell.column, cell.solution, solved)
+        # Same column
+        remove_same(puzzle.columns, cell.column, cell.solution, solved)
 
-    # Same box
-    remove_same(puzzle.boxes, cell.box, cell.solution, solved)
+        # Same box
+        remove_same(puzzle.boxes, cell.box, cell.solution, solved)
+
+    # Further processing is required
+    
+    # Find unsolved row values 
+    for key, row in puzzle.rows.items():
+        occurences = {}
+        for uncertain in row["unsolved"]:
+            occurences[str(uncertain)] = []
+            for square in row["squares"]:
+                if not square.solution:
+                    if uncertain in square.possible_solutions:
+                        occurences[str(uncertain)].append(square.ID) 
+
+        for num, frequency in occurences.items():
+            if len(frequency) == 1:
+                squares[frequency[0]].solution = int(num)
+                squares[frequency[0]].possible_solutions = int(num)
+                solved.append(squares[frequency[0]])  
+
+    # Find unsolved column values
+    for key, column in puzzle.columns.items():
+        occurences = {}
+        for uncertain in column["unsolved"]:
+            occurences[str(uncertain)] = []
+            for square in column["squares"]:
+                if not square.solution:
+                    if uncertain in square.possible_solutions:
+                        occurences[str(uncertain)].append(square.ID) 
+
+        for num, frequency in occurences.items():
+            if len(frequency) == 1:
+                squares[frequency[0]].solution = int(num)
+                squares[frequency[0]].possible_solutions = int(num)
+                solved.append(squares[frequency[0]])      
+
+    # Find unsolved box values
+    for key, box in puzzle.boxes.items():
+        occurences = {}
+        for uncertain in box["unsolved"]:
+            occurences[str(uncertain)] = []
+            for square in box["squares"]:
+                if not square.solution:
+                    if uncertain in square.possible_solutions:
+                        occurences[str(uncertain)].append(square.ID) 
+
+        for num, frequency in occurences.items():
+            if len(frequency) == 1:
+                squares[frequency[0]].solution = int(num)
+                squares[frequency[0]].possible_solutions = int(num)
+                solved.append(squares[frequency[0]])                
+
+# Create puzzle solution text file
+file_create("solution.txt", squares)
 
 # Create puzzle solution text file
 file_create("solution.txt", squares)
