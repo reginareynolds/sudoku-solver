@@ -4,12 +4,14 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
 
+# Consists of 9 rows, 9 columns, and 9 boxes, each of which contains 9 Square objects
 class Puzzle():
     def __init__(self):
         self.rows = {}
         self.columns = {}
         self.boxes = {}
 
+# Contains the row, column, and box in which the object is located, the potential solutions to the box, and the final solution once solved
 class Square():
     def __init__(self):
         self.ID = None
@@ -60,19 +62,16 @@ def remove_same(grouping, index, solution, solved_list):
 # Find unsolved group values 
 def find_unsolved(grouping, solved_list):
     for key, group in grouping.items():
-        occurences = {}
-        for uncertain in group["unsolved"]:
-            occurences[str(uncertain)] = []
+        for num, frequency in group["unsolved"].items():
             for square in group["squares"]:
                 if not square.solution:
-                    if uncertain in square.possible_solutions:
-                        occurences[str(uncertain)].append(square) 
-
-        for num, frequency in occurences.items():
+                    if int(num) in square.possible_solutions:
+                        frequency.append(square)
+            
             if len(frequency) == 1:
                 frequency[0].solution = int(num)
                 frequency[0].possible_solutions = int(num)
-                solved_list.append(frequency[0])  
+                solved_list.append(frequency[0])
 
 
 
@@ -139,9 +138,9 @@ file_create("puzzle.txt", squares)
 puzzle = Puzzle()
 loop = 0
 while loop < 9:
-    row = {"squares": [], "unsolved": [1, 2, 3, 4, 5, 6, 7, 8, 9]}
-    column = {"squares": [], "unsolved": [1, 2, 3, 4, 5, 6, 7, 8, 9]}
-    box = {"squares": [], "unsolved": [1, 2, 3, 4, 5, 6, 7, 8, 9]}
+    row = {"squares": [], "unsolved": {"1": [], "2": [], "3": [], "4": [], "5": [], "6": [], "7": [], "8": [], "9": []}}
+    column = {"squares": [], "unsolved": {"1": [], "2": [], "3": [], "4": [], "5": [], "6": [], "7": [], "8": [], "9": []}}
+    box = {"squares": [], "unsolved": {"1": [], "2": [], "3": [], "4": [], "5": [], "6": [], "7": [], "8": [], "9": []}}
     for square in squares:
         if square.row == loop:
             row["squares"].append(square)
@@ -176,21 +175,8 @@ while len(solved) < 81:
     # Find unsolved row values 
     find_unsolved(puzzle.rows, solved)
 
-        for num, frequency in occurences.items():
-            if len(frequency) == 1:
-                frequency[0].solution = int(num)
-                frequency[0].possible_solutions = int(num)
-                solved.append(frequency[0])  
-
     # Find unsolved column values
-    find_unsolved(puzzle.columns, solved)
-
-
-        for num, frequency in occurences.items():
-            if len(frequency) == 1:
-                frequency[0].solution = int(num)
-                frequency[0].possible_solutions = int(num)
-                solved.append(frequency[0])     
+    find_unsolved(puzzle.columns, solved)  
 
     # Find unsolved box values
     for key, box in puzzle.boxes.items():
