@@ -163,13 +163,13 @@ while len(solved) < 81:
             for square in row["squares"]:
                 if not square.solution:
                     if uncertain in square.possible_solutions:
-                        occurences[str(uncertain)].append(square.ID) 
+                        occurences[str(uncertain)].append(square) 
 
         for num, frequency in occurences.items():
             if len(frequency) == 1:
-                squares[frequency[0]].solution = int(num)
-                squares[frequency[0]].possible_solutions = int(num)
-                solved.append(squares[frequency[0]])  
+                frequency[0].solution = int(num)
+                frequency[0].possible_solutions = int(num)
+                solved.append(frequency[0])  
 
     # Find unsolved column values
     for key, column in puzzle.columns.items():
@@ -179,13 +179,13 @@ while len(solved) < 81:
             for square in column["squares"]:
                 if not square.solution:
                     if uncertain in square.possible_solutions:
-                        occurences[str(uncertain)].append(square.ID) 
+                        occurences[str(uncertain)].append(square) 
 
         for num, frequency in occurences.items():
             if len(frequency) == 1:
-                squares[frequency[0]].solution = int(num)
-                squares[frequency[0]].possible_solutions = int(num)
-                solved.append(squares[frequency[0]])      
+                frequency[0].solution = int(num)
+                frequency[0].possible_solutions = int(num)
+                solved.append(frequency[0])     
 
     # Find unsolved box values
     for key, box in puzzle.boxes.items():
@@ -199,9 +199,9 @@ while len(solved) < 81:
 
         for num, frequency in occurences.items():
             if len(frequency) == 1:
-                squares[frequency[0]].solution = int(num)
-                squares[frequency[0]].possible_solutions = int(num)
-                solved.append(squares[frequency[0]])                
+                frequency[0].solution = int(num)
+                frequency[0].possible_solutions = int(num)
+                solved.append(frequency[0])  
 
 # Create puzzle solution text file
 file_create("solution.txt", squares)
