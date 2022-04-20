@@ -57,6 +57,24 @@ def remove_same(grouping, index, solution, solved_list):
                     square.possible_solutions = int(square.possible_solutions[0])
                     solved_list.append(square)
 
+# Find unsolved group values 
+def find_unsolved(grouping, solved_list):
+    for key, group in grouping.items():
+        occurences = {}
+        for uncertain in group["unsolved"]:
+            occurences[str(uncertain)] = []
+            for square in group["squares"]:
+                if not square.solution:
+                    if uncertain in square.possible_solutions:
+                        occurences[str(uncertain)].append(square) 
+
+        for num, frequency in occurences.items():
+            if len(frequency) == 1:
+                frequency[0].solution = int(num)
+                frequency[0].possible_solutions = int(num)
+                solved_list.append(frequency[0])  
+
+
 
 # Rows will range in value from 0-8
 # Columns will range in value from 0-8
@@ -156,14 +174,7 @@ while len(solved) < 81:
     # Further processing is required
     
     # Find unsolved row values 
-    for key, row in puzzle.rows.items():
-        occurences = {}
-        for uncertain in row["unsolved"]:
-            occurences[str(uncertain)] = []
-            for square in row["squares"]:
-                if not square.solution:
-                    if uncertain in square.possible_solutions:
-                        occurences[str(uncertain)].append(square) 
+    find_unsolved(puzzle.rows, solved)
 
         for num, frequency in occurences.items():
             if len(frequency) == 1:
@@ -172,14 +183,8 @@ while len(solved) < 81:
                 solved.append(frequency[0])  
 
     # Find unsolved column values
-    for key, column in puzzle.columns.items():
-        occurences = {}
-        for uncertain in column["unsolved"]:
-            occurences[str(uncertain)] = []
-            for square in column["squares"]:
-                if not square.solution:
-                    if uncertain in square.possible_solutions:
-                        occurences[str(uncertain)].append(square) 
+    find_unsolved(puzzle.columns, solved)
+
 
         for num, frequency in occurences.items():
             if len(frequency) == 1:
