@@ -37,11 +37,7 @@ def file_create(filename, cells):
 # Remove solved cell values from potential solutions of cells in same grouping
 def remove_same(grouping, index, solution, solved_list):
     # Remove solved cell values from grouping's unsolved value list
-    try:
-        grouping[str(index)]["unsolved"].remove(solution)
-    # ValueError means solution was already removed
-    except ValueError:
-        pass
+    grouping[str(index)]["unsolved"].pop(str(solution), None)
     
     for square in grouping[str(index)]["squares"]:
         # Ignore solved squares
@@ -60,19 +56,59 @@ def remove_same(grouping, index, solution, solved_list):
                     solved_list.append(square)
 
 # Find unsolved group values 
-def find_unsolved(grouping, solved_list):
+def find_unsolved(grouping, solved_list, box_group = False):
     for key, group in grouping.items():
+        # What cells can contain each unsolved value?
         for num, frequency in group["unsolved"].items():
             for square in group["squares"]:
                 if not square.solution:
                     if int(num) in square.possible_solutions:
                         frequency.append(square)
-            
+                        # TODO: Fix repeatedly adding same squares on each function run
+            # Only one cell can contain the unsolved value            
             if len(frequency) == 1:
                 frequency[0].solution = int(num)
                 frequency[0].possible_solutions = int(num)
                 solved_list.append(frequency[0])
 
+                # TODO: Remove unsolved value from unsolved value list. Will this cause a conflict by skipping over a dictionary value?
+            elif box_group:
+                # When you know the row or column within a box where a number must appear,
+                # you know that number CAN'T appear on that row or column in neighboring boxes
+                # Example:
+                #                 2      
+                #             5 7 X
+                # A B C D E F X X X
+                #             8 3 9
+                # The 2 in this bottom box MUST appear below the 5 or 7
+                # This means that 2 CANNOT appear anywhere else in the rest 
+                # of the row, i.e., spots A-F. Therefore, 2 must be removed
+                # as a possible solution for cells A-F.
+
+                rows = []
+                cols = []
+                for cell in frequency:
+                    if cell.row not in rows:
+                        rows.append(cell.row)
+
+                    if cell.column not in cols:
+                        cols.append(cell.column)
+
+                # Value for this row MUST appear in this box 
+                if len(rows) == 1:
+                    for cell in puzzle.rows[str(rows[0])]["squares"]:
+                        # Ignore solved cells
+                        if not cell.solution:
+                            if cell.box != int(key) and int(num) in cell.possible_solutions:
+                                cell.possible_solutions.remove(int(num))
+                
+                # Value for this column MUST appear in this box                 
+                if len(cols) == 1:
+                    for cell in puzzle.columns[str(cols[0])]["squares"]:
+                        # Ignore solved cells
+                        if not cell.solution:
+                            if cell.box != int(key) and int(num) in cell.possible_solutions:
+                                cell.possible_solutions.remove(int(num))
 
 
 # Rows will range in value from 0-8
@@ -81,6 +117,8 @@ def find_unsolved(grouping, solved_list):
 
 # Possible square solutions will depend on other squares in the same row, column, and box
 # Solved cells remove their solution as a possibility from unsolved cells in the same row/column/box
+# If a cell has only one possible solution, that must be the solution for that cell.
+# If an unsolved value in a group (row, column, box) has only one possible group cell it can appear in, it must appear in that cell.
 # If the puzzle is still not solved at that point, further processing is necessary.
 
 # Generate puzzle by scraping NYT sudoku puzzle
@@ -179,14 +217,7 @@ while len(solved) < 81:
     find_unsolved(puzzle.columns, solved)  
 
     # Find unsolved box values
-    for key, box in puzzle.boxes.items():
-        occurences = {}
-        for uncertain in box["unsolved"]:
-            occurences[str(uncertain)] = []
-            for square in box["squares"]:
-                if not square.solution:
-                    if uncertain in square.possible_solutions:
-                        occurences[str(uncertain)].append(square.ID) 
+    find_unsolved(puzzle.boxes, solved, box_group = True)
 
         for num, frequency in occurences.items():
             if len(frequency) == 1:
