@@ -61,20 +61,17 @@ def find_unsolved(grouping, solved_list, box_group = False):
         # What cells can contain each unsolved value?
         for num, frequency in group["unsolved"].items():
             for square in group["squares"]:
-                # Ignore solved squares
-                if not square.solution:
-                    # Only append square if value is possible solution and not already added
-                    if int(num) in square.possible_solutions:
-                        if square not in frequency:
-                            frequency.append(square)
-                    # Remove square if previously added but value no longer possible solution
-                    elif int(num) not in square.possible_solutions:
-                        if square in frequency:
-                            frequency.remove(square)
-                # Remove previously added squares that have since been solved
+                # Only append square if value is possible solution and not already added
+                if not square.solution and int(num) in square.possible_solutions:
+                    if square not in frequency:
+                        frequency.append(square)
+                        
+                # Remove square if previously added and: 
+                # A) value no longer possible solution or 
+                # B) since solved
                 elif square in frequency:
-                # elif square.solution and square in frequency:
                     frequency.remove(square)
+
             # Only one cell can contain the unsolved value            
             if len(frequency) == 1:
                 frequency[0].solution = int(num)
@@ -229,14 +226,7 @@ while len(solved) < 81:
     # Find unsolved box values
     find_unsolved(puzzle.boxes, solved, box_group = True)
 
-        for num, frequency in occurences.items():
-            if len(frequency) == 1:
-                frequency[0].solution = int(num)
-                frequency[0].possible_solutions = int(num)
-                solved.append(frequency[0])  
-
-# Create puzzle solution text file
-file_create("solution.txt", squares)
+    # Create puzzle solution text file
 
 # Create puzzle solution text file
 file_create("solution.txt", squares)
