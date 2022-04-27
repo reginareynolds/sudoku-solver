@@ -78,6 +78,7 @@ def find_unsolved(grouping, solved_list, box_group = False):
                 frequency[0].possible_solutions = int(num)
                 solved_list.append(frequency[0])
 
+                # TODO: Immediately remove solution from possible solutions of groupmates
                 # TODO: Remove unsolved value from unsolved value list. Will this cause a conflict by skipping over a dictionary value?
             elif box_group:
                 # When you know the row or column within a box where a number must appear,
