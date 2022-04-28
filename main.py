@@ -228,6 +228,30 @@ while len(solved) < 81:
     find_unsolved(puzzle.boxes, solved, box_group = True)
 
     # Create puzzle solution text file
+    file_create("solution.txt", squares)
 
+# If a cell has all but one value in the same row, column, and box, that must be the value of the cell
+#       3 6 8
+#       E F 1
+# 2 A 3 B 7 X 9 C D
+#           4
+# In the above example, X must be 5, since the box already contains 1, 3, 6, and 7,
+# the column contains 4 and 8, and the row contains 2, 3, and 9.
+# TODO: Account for when the values of a pair of cells could be either way:
+# 1 2 3
+# 4 5 6
+# 7 A B 1 2 3 4 5 6
+#   1 2
+#   3 5
+#   4 7
+# 2 C D 3 4 5 6 7 1
+# 3 6 1
+# 5 7 4
+# In the above example, A and B can both be 8 or 9, and C and D can both be 8 or 9. 
 # Create puzzle solution text file
+# TODO: If numbers A and B can only go in squares C and D of a grouping, no other squares in the grouping can have A or B as possible solutions
+# X X X X X X 1 C 7
+# 6 X 2 X X X E F 8
+# X 9 X 8 X X 3 5 D
+# In the above example, squares E and F cannot contain 2 or 6, so they must contain 4 or 9. This means squares C and D CANNOT contain 4 or 9.
 file_create("solution.txt", squares)
