@@ -53,19 +53,33 @@ def remove_same(grouping, index, solution, solved_list):
                 if len(square.possible_solutions) == 1:
                     square.solution = int(square.possible_solutions[0])
                     square.possible_solutions = int(square.possible_solutions[0])
+
+                    puzzle.rows[str(square.row)]["unsolved"].pop(str(square.solution), None)
+                    puzzle.columns[str(square.column)]["unsolved"].pop(str(square.solution), None)
+                    puzzle.boxes[str(square.box)]["unsolved"].pop(str(square.solution), None)
                     solved_list.append(square)
+
+def refine_solutions(grouping, index, comparison):
+    for cell in grouping[str(index)]["squares"]:
+        # Ignore solved cells
+        if not cell.solution:
+            if comparison in cell.possible_solutions:
+                cell.possible_solutions.remove(comparison)
 
 # Find unsolved group values 
 def find_unsolved(grouping, solved_list, box_group = False):
     for key, group in grouping.items():
         # What cells can contain each unsolved value?
+
+        # num is an unsolved integer value represented as a string
+        # frequency is the list of cells within the group that may contain num
         for num, frequency in group["unsolved"].items():
             for square in group["squares"]:
                 # Only append square if value is possible solution and not already added
                 if not square.solution and int(num) in square.possible_solutions:
                     if square not in frequency:
                         frequency.append(square)
-                        
+
                 # Remove square if previously added and: 
                 # A) value no longer possible solution or 
                 # B) since solved
@@ -78,9 +92,53 @@ def find_unsolved(grouping, solved_list, box_group = False):
                 frequency[0].possible_solutions = int(num)
                 solved_list.append(frequency[0])
 
+                refine_solutions(puzzle.rows, frequency[0].row, frequency[0].solution)
+
+                refine_solutions(puzzle.columns, frequency[0].column, frequency[0].solution)
+
+                refine_solutions(puzzle.boxes, frequency[0].box, frequency[0].solution)
+
+            else:
+                # If numbers A and B can only go in squares C and D of a grouping, no 
+                # other squares in the grouping can have A or B as possible solutions.
+                # More generally, when the same possible numbers can appear in the same 
+                # potential cells, you know those numbers CAN'T appear anywhere else in the 
+                # row/box/column.
+                # Example:
+                #             1 A 7
+                # 6 X 2 X X X B C 8
+                #             3 5 D
+                # In the above example, the box containing squares squares A-D is missing a 
+                # 4. Without any 4s in intersecting rows/columns, the 4 in this box seems to
+                # be a potential solution for all of the squares A-D. However, this box is also
+                # missing 2, 6, and 9. The row intersecting squares B and C already has a 2
+                # and a 6. This means that squares B and C CANNOT contain 2 or 6, so they MUST 
+                # contain 4 or 9. This means squares C and D CANNOT contain 4 or 9 and instead
+                # MUST contain 2 or 6.                
+
+                # Find unsolved values that share the same potential containing cells
+                indices = [int(num)]
+                for nnum, nfrequency in group["unsolved"].items():
+                    if num != nnum:
+                        if frequency == nfrequency:
+                            indices.append(int(nnum))
+
+                # Compare number of unsolved values against number of potential containing cells
+                # i.e. if 1, 2, and 3 can each go in cells A, B, or C, then no other cells in
+                # the grouping can contain 1, 2, or 3. The number of unsolved values must be equal
+                # to the number of potential containing cells.
+                if len(indices) == len(frequency):
+                    for sq in frequency:
+                        to_remove = []                
+                        for sol in sq.possible_solutions:
+                            if sol not in indices:
+                                to_remove.append(sol)
+                        for index in to_remove:
+                            sq.possible_solutions.remove(index)
+
                 # TODO: Immediately remove solution from possible solutions of groupmates
                 # TODO: Remove unsolved value from unsolved value list. Will this cause a conflict by skipping over a dictionary value?
-            elif box_group:
+            if box_group:
                 # When you know the row or column within a box where a number must appear,
                 # you know that number CAN'T appear on that row or column in neighboring boxes
                 # Example:
@@ -249,9 +307,4 @@ while len(solved) < 81:
 # 5 7 4
 # In the above example, A and B can both be 8 or 9, and C and D can both be 8 or 9. 
 # Create puzzle solution text file
-# TODO: If numbers A and B can only go in squares C and D of a grouping, no other squares in the grouping can have A or B as possible solutions
-# X X X X X X 1 C 7
-# 6 X 2 X X X E F 8
-# X 9 X 8 X X 3 5 D
-# In the above example, squares E and F cannot contain 2 or 6, so they must contain 4 or 9. This means squares C and D CANNOT contain 4 or 9.
 file_create("solution.txt", squares)
