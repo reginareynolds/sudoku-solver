@@ -1,13 +1,47 @@
 #:kivy 1.0.9
 
-<RootScreen>:
-    canvas:
-        Rectangle:
-            pos: root.pos
-            size: root.size
+<Square@Button>:
+    text: "X"
+    top: root.top
+    width: root.width
 
-    Label:
-        font_size: 70
-        center_x: root.width/2
-        top:root.top - 50
-        text: "Sudoku"
+<Board@GridLayout>:
+    top: root.top
+    width: root.width
+    cols: 3
+    rows: 3
+    padding: 2
+    orientation: 'lr-tb'
+
+<Screen>:
+    board: boxes
+    
+    GridLayout:
+        top: root.top - 10
+        cols: 1
+        rows: 2
+        width: root.width
+        padding: [0, 20, 0, 0]
+        spacing: [0, 20]
+
+        Label:
+            text: "Sudoku"
+            font_size: 70
+            center_x: root.width/2
+            top: root.top 
+            height: 70
+        
+        Board:
+            id: boxes
+            top: root.top
+            row_default_height: (root.top-85)/3
+
+            Board:
+            Board:
+            Board:
+            Board:
+            Board:
+            Board:
+            Board:
+            Board:
+            Board:
