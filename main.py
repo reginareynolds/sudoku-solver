@@ -178,6 +178,12 @@ def find_unsolved(grouping, solved_list, box_group = False):
                                 cell.possible_solutions.remove(int(num))
 
 
+# GENERAL OVERVIEW
+# 1. Scrape sudoku puzzle from New York Times
+# 2. Parse scraped puzzle
+# 3. Create visual puzzle representation
+# 4. Solve for missing squares and update visual puzzle representation
+
 # Rows will range in value from 0-8
 # Columns will range in value from 0-8
 # Boxes will range in value from 0-8
@@ -188,57 +194,69 @@ def find_unsolved(grouping, solved_list, box_group = False):
 # If an unsolved value in a group (row, column, box) has only one possible group cell it can appear in, it must appear in that cell.
 # If the puzzle is still not solved at that point, further processing is necessary.
 
-# Prevent browser window from showing
-chrome_options = Options()
-chrome_options.add_argument("--headless")
 
-# Generate puzzle by scraping NYT sudoku puzzle
-driver = webdriver.Chrome(ChromeDriverManager().install(), chrome_options=chrome_options)
-driver.get("https://www.nytimes.com/puzzles/sudoku/hard")
+# Scrape sudoku puzzle from New York Times site
+def scrape_puzzle(puzzle_squares, solved_cells):
+    # Prevent browser window from showing
+    chrome_options = Options()
+    chrome_options.add_argument("--headless")
 
-squares = []
+    # Generate puzzle by scraping NYT sudoku puzzle
+    driver = webdriver.Chrome(ChromeDriverManager().install(), chrome_options=chrome_options)
+    driver.get("https://www.nytimes.com/puzzles/sudoku/hard")
+
+    # squares = []
+    # solved = []  # List of solved cells
+
+    # Wait for page load
+    try:
+        page = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CLASS_NAME, "su-board")))
+    finally:
+        # Get squares
+        cells = page.find_elements(By.CLASS_NAME, "su-cell")
+
+    number = 0
+    row = 0
+    column = 0
+    box = 0
+    # Parse puzzle
+    for cell in cells:
+        sq = Square()
+        sq.ID = number
+        sq.row = row
+        sq.column = column
+        sq.box = box
+
+        # Find prefilled squares
+        if cell.accessible_name != "empty":
+            sq.solution = int(cell.accessible_name)
+            sq.possible_solutions = int(cell.accessible_name)
+
+            solved_cells.append(sq)
+
+        # Increment location values as necessary
+        if not (column+1)%3:
+            box = box + 1
+        if column<8:
+            column = column + 1
+        else:
+            column = 0
+            row = row + 1
+
+            if row%3:
+                box = box-3
+
+        number = number + 1
+        puzzle_squares.append(sq)
+
+    # Close selenium
+    driver.close()
+
+# Initialize globals
+squares = []  # List of squares in puzzle
 solved = []  # List of solved cells
 
-# Wait for page load
-try:
-    page = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CLASS_NAME, "su-board")))
-finally:
-    # Get squares
-    cells = page.find_elements(By.CLASS_NAME, "su-cell")
-
-number = 0
-row = 0
-column = 0
-box = 0
-# Parse puzzle
-for cell in cells:
-    sq = Square()
-    sq.ID = number
-    sq.row = row
-    sq.column = column
-    sq.box = box
-
-    # Find prefilled squares
-    if cell.accessible_name != "empty":
-        sq.solution = int(cell.accessible_name)
-        sq.possible_solutions = int(cell.accessible_name)
-
-        solved.append(sq)
-
-    # Increment location values as necessary
-    if not (column+1)%3:
-        box = box + 1
-    if column<8:
-        column = column + 1
-    else:
-        column = 0
-        row = row + 1
-
-        if row%3:
-            box = box-3
-
-    number = number + 1
-    squares.append(sq)
+scrape_puzzle(squares, solved)
 
 # Create puzzle text file
 file_create("puzzle.txt", squares)
