@@ -1,4 +1,5 @@
 from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -187,9 +188,13 @@ def find_unsolved(grouping, solved_list, box_group = False):
 # If an unsolved value in a group (row, column, box) has only one possible group cell it can appear in, it must appear in that cell.
 # If the puzzle is still not solved at that point, further processing is necessary.
 
+# Prevent browser window from showing
+chrome_options = Options()
+chrome_options.add_argument("--headless")
+
 # Generate puzzle by scraping NYT sudoku puzzle
-driver = webdriver.Chrome(ChromeDriverManager().install())
-driver.get("https://www.nytimes.com/puzzles/sudoku/easy")
+driver = webdriver.Chrome(ChromeDriverManager().install(), chrome_options=chrome_options)
+driver.get("https://www.nytimes.com/puzzles/sudoku/hard")
 
 squares = []
 solved = []  # List of solved cells
