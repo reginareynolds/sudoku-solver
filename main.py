@@ -62,7 +62,7 @@ def scrape_puzzle(puzzle_squares, solved_cells):
         if cell.accessible_name != "empty":
             sq.solution = int(cell.accessible_name)
             sq.possible_solutions = int(cell.accessible_name)
-
+            sq.background_color = "green"  # Set solved square color to green
             solved_cells.append(sq)
 
         # Increment location values as necessary
@@ -115,6 +115,7 @@ def remove_same(grouping, index, solution, solved_list):
                 if len(square.possible_solutions) == 1:
                     square.solution = int(square.possible_solutions[0])
                     square.possible_solutions = int(square.possible_solutions[0])
+                    square.background_color = "green"
 
                     puzzle.rows[str(square.row)]["unsolved"].pop(str(square.solution), None)
                     puzzle.columns[str(square.column)]["unsolved"].pop(str(square.solution), None)
@@ -152,6 +153,7 @@ def find_unsolved(grouping, solved_list, box_group = False):
             if len(frequency) == 1:
                 frequency[0].solution = int(num)
                 frequency[0].possible_solutions = int(num)
+                frequency[0].background_color = "green"
                 solved_list.append(frequency[0])
 
                 refine_solutions(puzzle.rows, frequency[0].row, frequency[0].solution)
@@ -281,6 +283,7 @@ class Square(Button):
         self.box = None
         self.possible_solutions = [1, 2, 3, 4, 5, 6, 7, 8, 9]
         self.solution = None
+        self.background_color = "red"
 
 class Screen(Widget):
     board = ObjectProperty(None)
@@ -341,7 +344,6 @@ class SudokuApp(App):
         
         return content
 
-        # TODO: Change square color once it's solved
 
 if __name__ == '__main__':
     # Initialize globals
