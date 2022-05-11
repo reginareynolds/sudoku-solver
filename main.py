@@ -1,25 +1,87 @@
 from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
 
-# Consists of 9 rows, 9 columns, and 9 boxes, each of which contains 9 Square objects
-class Puzzle():
-    def __init__(self):
-        self.rows = {}
-        self.columns = {}
-        self.boxes = {}
+from kivy.app import App
+from kivy.clock import Clock
+from kivy.properties import ObjectProperty
+# from kivy.uix.progressbar import ProgressBar
+from kivy.uix.button import Button
+from kivy.uix.widget import Widget
 
-# Contains the row, column, and box in which the object is located, the potential solutions to the box, and the final solution once solved
-class Square():
-    def __init__(self):
-        self.ID = None
-        self.row = None
-        self.column = None
-        self.box = None
-        self.possible_solutions = [1, 2, 3, 4, 5, 6, 7, 8, 9]
-        self.solution = None
+
+# GENERAL PROGRAM OVERVIEW
+# 1. Scrape sudoku puzzle from New York Times
+# 2. Parse scraped puzzle
+# 3. Create visual puzzle representation
+# 4. Solve for missing squares and update visual puzzle representation
+
+# Rows will range in value from 0-8
+# Columns will range in value from 0-8
+# Boxes will range in value from 0-8
+
+# Possible square solutions will depend on other squares in the same row, column, and box
+# Solved cells remove their solution as a possibility from unsolved cells in the same row/column/box
+# If a cell has only one possible solution, that must be the solution for that cell.
+# If an unsolved value in a group (row, column, box) has only one possible group cell it can appear in, it must appear in that cell.
+# If the puzzle is still not solved at that point, further processing is necessary.
+
+# Scrape sudoku puzzle from New York Times site
+def scrape_puzzle(puzzle_squares, solved_cells):
+    # Prevent browser window from showing
+    chrome_options = Options()
+    chrome_options.add_argument("--headless")
+
+    # Generate puzzle by scraping NYT sudoku puzzle
+    driver = webdriver.Chrome(ChromeDriverManager().install(), chrome_options=chrome_options)
+    driver.get("https://www.nytimes.com/puzzles/sudoku/hard")
+
+    # Wait for page load
+    try:
+        page = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CLASS_NAME, "su-board")))
+    finally:
+        # Get squares
+        cells = page.find_elements(By.CLASS_NAME, "su-cell")
+
+    number = 0
+    row = 0
+    column = 0
+    box = 0
+    # Parse puzzle
+    for cell in cells:
+        sq = Square()
+        sq.ID = number
+        sq.row = row
+        sq.column = column
+        sq.box = box
+
+        # Find prefilled squares
+        if cell.accessible_name != "empty":
+            sq.solution = int(cell.accessible_name)
+            sq.possible_solutions = int(cell.accessible_name)
+            sq.background_color = "green"  # Set solved square color to green
+            solved_cells.append(sq)
+
+        # Increment location values as necessary
+        if not (column+1)%3:
+            box = box + 1
+        if column<8:
+            column = column + 1
+        else:
+            column = 0
+            row = row + 1
+
+            if row%3:
+                box = box-3
+
+        number = number + 1
+        puzzle_squares.append(sq)
+
+    # Close selenium
+    driver.close()
 
 # Create text representation of puzzle/solution and write to passed file
 def file_create(filename, cells):
@@ -35,36 +97,25 @@ def file_create(filename, cells):
                     file.write("\n")
 
 # Remove solved cell values from potential solutions of cells in same grouping
-def remove_same(grouping, index, solution, solved_list):
-    # Remove solved cell values from grouping's unsolved value list
-    grouping[str(index)]["unsolved"].pop(str(solution), None)
-    
-    for square in grouping[str(index)]["squares"]:
-        # Ignore solved squares
-        if not square.solution:
-            # Remove solved cell values from square's potential value list
-            try:
-                square.possible_solutions.remove(solution)
-            # ValueError means solution was already removed
-            except ValueError:
-                pass
-            finally:
-                # Add newly solved squares to solved square list
-                if len(square.possible_solutions) == 1:
-                    square.solution = int(square.possible_solutions[0])
-                    square.possible_solutions = int(square.possible_solutions[0])
-
-                    puzzle.rows[str(square.row)]["unsolved"].pop(str(square.solution), None)
-                    puzzle.columns[str(square.column)]["unsolved"].pop(str(square.solution), None)
-                    puzzle.boxes[str(square.box)]["unsolved"].pop(str(square.solution), None)
-                    solved_list.append(square)
-
-def refine_solutions(grouping, index, comparison):
+def remove_same(grouping, index, solution, solved_list):    
     for cell in grouping[str(index)]["squares"]:
         # Ignore solved cells
         if not cell.solution:
-            if comparison in cell.possible_solutions:
-                cell.possible_solutions.remove(comparison)
+            if solution in cell.possible_solutions:
+                # Remove solved cell values from square's potential value list
+                cell.possible_solutions.remove(solution)
+
+                # Add newly solved squares to solved square list
+                if len(cell.possible_solutions) == 1:
+                    cell.solution = int(cell.possible_solutions[0])
+                    cell.possible_solutions = int(cell.possible_solutions[0])
+                    cell.background_color = "green"
+
+                    # Remove newly solved cell value from grouping's unsolved value list    
+                    puzzle.rows[str(cell.row)]["unsolved"].pop(str(cell.solution), None)
+                    puzzle.columns[str(cell.column)]["unsolved"].pop(str(cell.solution), None)
+                    puzzle.boxes[str(cell.box)]["unsolved"].pop(str(cell.solution), None)
+                    solved_list.append(cell)    
 
 # Find unsolved group values 
 def find_unsolved(grouping, solved_list, box_group = False):
@@ -90,13 +141,14 @@ def find_unsolved(grouping, solved_list, box_group = False):
             if len(frequency) == 1:
                 frequency[0].solution = int(num)
                 frequency[0].possible_solutions = int(num)
+                frequency[0].background_color = "green"
                 solved_list.append(frequency[0])
 
-                refine_solutions(puzzle.rows, frequency[0].row, frequency[0].solution)
+                remove_same(puzzle.rows, frequency[0].row, frequency[0].solution, solved_list)
 
-                refine_solutions(puzzle.columns, frequency[0].column, frequency[0].solution)
+                remove_same(puzzle.columns, frequency[0].column, frequency[0].solution, solved_list)
 
-                refine_solutions(puzzle.boxes, frequency[0].box, frequency[0].solution)
+                remove_same(puzzle.boxes, frequency[0].box, frequency[0].solution, solved_list)
 
             else:
                 # If numbers A and B can only go in squares C and D of a grouping, no 
@@ -176,117 +228,120 @@ def find_unsolved(grouping, solved_list, box_group = False):
                             if cell.box != int(key) and int(num) in cell.possible_solutions:
                                 cell.possible_solutions.remove(int(num))
 
+# Consists of 9 rows, 9 columns, and 9 boxes, each of which contains 9 Square objects
+class Puzzle():
+    def __init__(self):
+        self.rows = {}
+        self.columns = {}
+        self.boxes = {}
 
-# Rows will range in value from 0-8
-# Columns will range in value from 0-8
-# Boxes will range in value from 0-8
+    # Add squares to puzzle class
+    def create(self, puzzle_squares):
+        loop = 0
+        while loop < 9:
+            row = {"squares": [], "unsolved": {"1": [], "2": [], "3": [], "4": [], "5": [], "6": [], "7": [], "8": [], "9": []}}
+            column = {"squares": [], "unsolved": {"1": [], "2": [], "3": [], "4": [], "5": [], "6": [], "7": [], "8": [], "9": []}}
+            box = {"squares": [], "unsolved": {"1": [], "2": [], "3": [], "4": [], "5": [], "6": [], "7": [], "8": [], "9": []}}
+            for square in puzzle_squares:
+                if square.row == loop:
+                    row["squares"].append(square)
 
-# Possible square solutions will depend on other squares in the same row, column, and box
-# Solved cells remove their solution as a possibility from unsolved cells in the same row/column/box
-# If a cell has only one possible solution, that must be the solution for that cell.
-# If an unsolved value in a group (row, column, box) has only one possible group cell it can appear in, it must appear in that cell.
-# If the puzzle is still not solved at that point, further processing is necessary.
+                if square.column == loop:
+                    column["squares"].append(square)
 
-# Generate puzzle by scraping NYT sudoku puzzle
-driver = webdriver.Chrome(ChromeDriverManager().install())
-driver.get("https://www.nytimes.com/puzzles/sudoku/easy")
+                if square.box == loop:
+                    box["squares"].append(square)
 
-squares = []
-solved = []  # List of solved cells
+            self.rows[str(loop)] = row
+            self.columns[str(loop)] = column
+            self.boxes[str(loop)] = box
 
-# Wait for page load
-try:
-    page = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CLASS_NAME, "su-board")))
-finally:
-    # Get squares
-    cells = page.find_elements(By.CLASS_NAME, "su-cell")
+            loop = loop + 1
 
-number = 0
-row = 0
-column = 0
-box = 0
-# Parse puzzle
-for cell in cells:
-    sq = Square()
-    sq.ID = number
-    sq.row = row
-    sq.column = column
-    sq.box = box
+        # Create puzzle text file
+        file_create("puzzle.txt", puzzle_squares)
 
-    # Find prefilled squares
-    if cell.accessible_name != "empty":
-        sq.solution = int(cell.accessible_name)
-        sq.possible_solutions = int(cell.accessible_name)
+# Contains the row, column, and box in which the object is located, the potential solutions to the box, and the final solution once solved
+class Square(Button):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.ID = None
+        self.row = None
+        self.column = None
+        self.box = None
+        self.possible_solutions = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+        self.solution = None
+        self.text = "X"
+        self.background_color = "red"
 
-        solved.append(sq)
+class Screen(Widget):
+    board = ObjectProperty(None)
 
-    # Increment location values as necessary
-    if not (column+1)%3:
-        box = box + 1
-    if column<8:
-        column = column + 1
-    else:
-        column = 0
-        row = row + 1
+    # Create initial visual puzzle representation
+    def create_board(self):
+        for key, cells in reversed(puzzle.boxes.items()):
+            for cell in cells['squares']:
+                if cell.solution != None:
+                    cell.text=str(cell.solution)
+                self.board.children[abs(int(key)-8)].add_widget(cell)
 
-        if row%3:
-            box = box-3
+    def update(self, dt):
+        # Check for if puzzle is solved
+        if len(solved) < 81:        
+            # Remove solved cell values from potential solutions of cells in the same row/column/box
+            for cell in solved:
+                # Same row
+                remove_same(puzzle.rows, cell.row, cell.solution, solved)
 
-    number = number + 1
-    squares.append(sq)
+                # Same column
+                remove_same(puzzle.columns, cell.column, cell.solution, solved)
 
-# Create puzzle text file
-file_create("puzzle.txt", squares)
+                # Same box
+                remove_same(puzzle.boxes, cell.box, cell.solution, solved)
 
-# Add squares to puzzle class
-puzzle = Puzzle()
-loop = 0
-while loop < 9:
-    row = {"squares": [], "unsolved": {"1": [], "2": [], "3": [], "4": [], "5": [], "6": [], "7": [], "8": [], "9": []}}
-    column = {"squares": [], "unsolved": {"1": [], "2": [], "3": [], "4": [], "5": [], "6": [], "7": [], "8": [], "9": []}}
-    box = {"squares": [], "unsolved": {"1": [], "2": [], "3": [], "4": [], "5": [], "6": [], "7": [], "8": [], "9": []}}
-    for square in squares:
-        if square.row == loop:
-            row["squares"].append(square)
+            # Further processing is required
+            
+            # Find unsolved row values 
+            find_unsolved(puzzle.rows, solved)
 
-        if square.column == loop:
-            column["squares"].append(square)
+            # Find unsolved column values
+            find_unsolved(puzzle.columns, solved)  
 
-        if square.box == loop:
-            box["squares"].append(square)
+            # Find unsolved box values
+            find_unsolved(puzzle.boxes, solved, box_group = True)
 
-    puzzle.rows[str(loop)] = row
-    puzzle.columns[str(loop)] = column
-    puzzle.boxes[str(loop)] = box
+            # Create puzzle solution text file
+            file_create("solution.txt", squares)
 
-    loop = loop + 1
+            for key, cells in reversed(puzzle.boxes.items()):
+                for cell in cells['squares']:
+                    if cell.solution != None:
+                        cell.text=str(cell.solution)
 
-# Check for if puzzle is solved
-while len(solved) < 81:
-    # Remove solved cell values from potential solutions of cells in the same row/column/box
-    for cell in solved:
-        # Same row
-        remove_same(puzzle.rows, cell.row, cell.solution, solved)
+class SudokuApp(App):
+    def build(self):
+        content = Screen()
 
-        # Same column
-        remove_same(puzzle.columns, cell.column, cell.solution, solved)
+        # Add scraped puzzle to visual representation
+        content.create_board()
 
-        # Same box
-        remove_same(puzzle.boxes, cell.box, cell.solution, solved)
+        Clock.schedule_interval(content.update, 5.0)
+        
+        return content
 
-    # Further processing is required
-    
-    # Find unsolved row values 
-    find_unsolved(puzzle.rows, solved)
 
-    # Find unsolved column values
-    find_unsolved(puzzle.columns, solved)  
+if __name__ == '__main__':
+    # Initialize globals
+    squares = []  # List of squares in puzzle
+    solved = []  # List of solved cells
+    puzzle = Puzzle()  # Puzzle object
 
-    # Find unsolved box values
-    find_unsolved(puzzle.boxes, solved, box_group = True)
+    # Read puzzle information and add to Puzzle object
+    scrape_puzzle(squares, solved)
+    puzzle.create(squares)
 
-    # Create puzzle solution text file
-    file_create("solution.txt", squares)
+    app=SudokuApp()
+    app.run()
 
 # If a cell has all but one value in the same row, column, and box, that must be the value of the cell
 #       3 6 8
@@ -306,5 +361,3 @@ while len(solved) < 81:
 # 3 6 1
 # 5 7 4
 # In the above example, A and B can both be 8 or 9, and C and D can both be 8 or 9. 
-# Create puzzle solution text file
-file_create("solution.txt", squares)
