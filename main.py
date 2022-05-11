@@ -283,6 +283,7 @@ class Square(Button):
         self.box = None
         self.possible_solutions = [1, 2, 3, 4, 5, 6, 7, 8, 9]
         self.solution = None
+        self.text = "X"
         self.background_color = "red"
 
 class Screen(Widget):
@@ -333,10 +334,6 @@ class SudokuApp(App):
     def build(self):
         content = Screen()
 
-        # Read puzzle information and add to Puzzle object
-        scrape_puzzle(squares, solved)
-        puzzle.create(squares)
-
         # Add scraped puzzle to visual representation
         content.create_board()
 
@@ -350,6 +347,10 @@ if __name__ == '__main__':
     squares = []  # List of squares in puzzle
     solved = []  # List of solved cells
     puzzle = Puzzle()  # Puzzle object
+
+    # Read puzzle information and add to Puzzle object
+    scrape_puzzle(squares, solved)
+    puzzle.create(squares)
 
     app=SudokuApp()
     app.run()
