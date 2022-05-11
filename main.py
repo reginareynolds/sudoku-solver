@@ -83,19 +83,6 @@ def scrape_puzzle(puzzle_squares, solved_cells):
     # Close selenium
     driver.close()
 
-# Create text representation of puzzle/solution and write to passed file
-def file_create(filename, cells):
-    with open(filename, "w") as file:
-        for cell in cells:
-            if(cell.solution):
-                file.write(str(cell.solution))
-            else:
-                file.write("x")
-            
-            if cell.column == 8:
-                if cell.row < 8:
-                    file.write("\n")
-
 # Remove solved cell values from potential solutions of cells in same grouping
 def remove_same(grouping, index, solution, solved_list):    
     for cell in grouping[str(index)]["squares"]:
@@ -258,9 +245,6 @@ class Puzzle():
 
             loop = loop + 1
 
-        # Create puzzle text file
-        file_create("puzzle.txt", puzzle_squares)
-
 # Contains the row, column, and box in which the object is located, the potential solutions to the box, and the final solution once solved
 class Square(Button):
     def __init__(self, **kwargs):
@@ -309,9 +293,6 @@ class Screen(Widget):
 
             # Find unsolved box values
             find_unsolved(puzzle.boxes, solved, box_group = True)
-
-            # Create puzzle solution text file
-            file_create("solution.txt", squares)
 
             for key, cells in reversed(puzzle.boxes.items()):
                 for cell in cells['squares']:
