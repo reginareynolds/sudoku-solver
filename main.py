@@ -97,37 +97,25 @@ def file_create(filename, cells):
                     file.write("\n")
 
 # Remove solved cell values from potential solutions of cells in same grouping
-def remove_same(grouping, index, solution, solved_list):
-    # Remove solved cell values from grouping's unsolved value list
-    grouping[str(index)]["unsolved"].pop(str(solution), None)
-    
-    for square in grouping[str(index)]["squares"]:
-        # Ignore solved squares
-        if not square.solution:
-            # Remove solved cell values from square's potential value list
-            try:
-                square.possible_solutions.remove(solution)
-            # ValueError means solution was already removed
-            except ValueError:
-                pass
-            finally:
-                # Add newly solved squares to solved square list
-                if len(square.possible_solutions) == 1:
-                    square.solution = int(square.possible_solutions[0])
-                    square.possible_solutions = int(square.possible_solutions[0])
-                    square.background_color = "green"
-
-                    puzzle.rows[str(square.row)]["unsolved"].pop(str(square.solution), None)
-                    puzzle.columns[str(square.column)]["unsolved"].pop(str(square.solution), None)
-                    puzzle.boxes[str(square.box)]["unsolved"].pop(str(square.solution), None)
-                    solved_list.append(square)
-
-def refine_solutions(grouping, index, comparison):
+def remove_same(grouping, index, solution, solved_list):    
     for cell in grouping[str(index)]["squares"]:
         # Ignore solved cells
         if not cell.solution:
-            if comparison in cell.possible_solutions:
-                cell.possible_solutions.remove(comparison)
+            if solution in cell.possible_solutions:
+                # Remove solved cell values from square's potential value list
+                cell.possible_solutions.remove(solution)
+
+                # Add newly solved squares to solved square list
+                if len(cell.possible_solutions) == 1:
+                    cell.solution = int(cell.possible_solutions[0])
+                    cell.possible_solutions = int(cell.possible_solutions[0])
+                    cell.background_color = "green"
+
+                    # Remove newly solved cell value from grouping's unsolved value list    
+                    puzzle.rows[str(cell.row)]["unsolved"].pop(str(cell.solution), None)
+                    puzzle.columns[str(cell.column)]["unsolved"].pop(str(cell.solution), None)
+                    puzzle.boxes[str(cell.box)]["unsolved"].pop(str(cell.solution), None)
+                    solved_list.append(cell)    
 
 # Find unsolved group values 
 def find_unsolved(grouping, solved_list, box_group = False):
@@ -156,11 +144,11 @@ def find_unsolved(grouping, solved_list, box_group = False):
                 frequency[0].background_color = "green"
                 solved_list.append(frequency[0])
 
-                refine_solutions(puzzle.rows, frequency[0].row, frequency[0].solution)
+                remove_same(puzzle.rows, frequency[0].row, frequency[0].solution, solved_list)
 
-                refine_solutions(puzzle.columns, frequency[0].column, frequency[0].solution)
+                remove_same(puzzle.columns, frequency[0].column, frequency[0].solution, solved_list)
 
-                refine_solutions(puzzle.boxes, frequency[0].box, frequency[0].solution)
+                remove_same(puzzle.boxes, frequency[0].box, frequency[0].solution, solved_list)
 
             else:
                 # If numbers A and B can only go in squares C and D of a grouping, no 
