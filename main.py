@@ -8,8 +8,9 @@ from webdriver_manager.chrome import ChromeDriverManager
 from kivy.app import App
 from kivy.clock import Clock
 from kivy.properties import ObjectProperty
-# from kivy.uix.progressbar import ProgressBar
+from kivy.uix.progressbar import ProgressBar
 from kivy.uix.button import Button
+from kivy.uix.screenmanager import ScreenManager, Screen
 from kivy.uix.widget import Widget
 
 
@@ -258,7 +259,21 @@ class Square(Button):
         self.text = "X"
         self.background_color = "red"
 
-class Screen(Widget):
+class DifficultyScreen(Widget):
+    options = ObjectProperty(None)
+
+    def callback(self, instance):
+        # Switch screens to loading screen
+        print("in callback")
+        pages.current = "loading"
+        print(pages.current_screen)
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        for child in self.options.children:
+            child.bind(on_press=self.callback)
+class LoadingScreen(Widget):
+    progress = ObjectProperty(None)
+class PuzzleScreen(Widget):
     board = ObjectProperty(None)
 
     # Create initial visual puzzle representation
@@ -301,7 +316,24 @@ class Screen(Widget):
 
 class SudokuApp(App):
     def build(self):
-        content = Screen()
+        diff_page = Screen(name="difficulty")
+        load_page = Screen(name="loading")
+        puzz_page = Screen(name="puzzle")
+
+        # Initialize difficulty selection screen and add to page
+        diff_screen = DifficultyScreen()
+        diff_page.add_widget(diff_screen)
+
+        load_screen = LoadingScreen()
+        load_page.add_widget(load_screen)
+
+        # puzz_screen = PuzzleScreen()
+        # puzz_page.add_widget(puzz_screen)
+
+        # Add pages to screen manager
+        pages.add_widget(diff_page)
+        pages.add_widget(load_page)
+        # pages.add_widget(puzz_page)
 
         # Add scraped puzzle to visual representation
         content.create_board()
@@ -310,6 +342,7 @@ class SudokuApp(App):
         
         return content
 
+        return pages
 
 if __name__ == '__main__':
     # Initialize globals
@@ -317,6 +350,7 @@ if __name__ == '__main__':
     solved = []  # List of solved cells
     puzzle = Puzzle()  # Puzzle object
 
+    pages = ScreenManager()
     # Read puzzle information and add to Puzzle object
     scrape_puzzle(squares, solved)
     puzzle.create(squares)
@@ -342,3 +376,6 @@ if __name__ == '__main__':
 # 3 6 1
 # 5 7 4
 # In the above example, A and B can both be 8 or 9, and C and D can both be 8 or 9. 
+
+# TODO: Allow user to select sudoku difficulty level, then scrape based on selection
+# TODO: implement progress bar to show percentage solved
