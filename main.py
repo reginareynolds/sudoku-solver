@@ -1,3 +1,5 @@
+from functools import partial
+from threading import Thread
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
@@ -31,14 +33,17 @@ from kivy.uix.widget import Widget
 # If the puzzle is still not solved at that point, further processing is necessary.
 
 # Scrape sudoku puzzle from New York Times site
-def scrape_puzzle(puzzle_squares, solved_cells):
+def scrape_puzzle(puzzle_squares, solved_cells, difficulty):    
     # Prevent browser window from showing
     chrome_options = Options()
     chrome_options.add_argument("--headless")
 
+    # Choose URL based on selected difficulty
+    site = ''.join(("https://www.nytimes.com/puzzles/sudoku/", difficulty.lower()))
+
     # Generate puzzle by scraping NYT sudoku puzzle
     driver = webdriver.Chrome(ChromeDriverManager().install(), chrome_options=chrome_options)
-    driver.get("https://www.nytimes.com/puzzles/sudoku/hard")
+    driver.get(site)
 
     # Wait for page load
     try:
