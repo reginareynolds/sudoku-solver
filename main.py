@@ -52,42 +52,10 @@ def scrape_puzzle(puzzle_squares, solved_cells, difficulty):
         # Get squares
         cells = page.find_elements(By.CLASS_NAME, "su-cell")
 
-    number = 0
-    row = 0
-    column = 0
-    box = 0
-    # Parse puzzle
-    for cell in cells:
-        sq = Square()
-        sq.ID = number
-        sq.row = row
-        sq.column = column
-        sq.box = box
-
-        # Find prefilled squares
-        if cell.accessible_name != "empty":
-            sq.solution = int(cell.accessible_name)
-            sq.possible_solutions = int(cell.accessible_name)
-            sq.background_color = "green"  # Set solved square color to green
-            solved_cells.append(sq)
-
-        # Increment location values as necessary
-        if not (column+1)%3:
-            box = box + 1
-        if column<8:
-            column = column + 1
-        else:
-            column = 0
-            row = row + 1
-
-            if row%3:
-                box = box-3
-
-        number = number + 1
-        puzzle_squares.append(sq)
-
-    # Close selenium
-    driver.close()
+        # N.B. Square class object can't be created in a new thread because
+        # Kivy graphics creation must happen in the main thread
+        loading = pages.get_screen("loading").children[0]
+        Clock.schedule_once(partial(loading.parse_puzzle, cells, driver))
 
 # Remove solved cell values from potential solutions of cells in same grouping
 def remove_same(grouping, index, solution, solved_list):    
@@ -251,6 +219,9 @@ class Puzzle():
 
             loop = loop + 1
 
+        # Initiate board creation
+        pages.get_screen("puzzle").children[0].create_board()        
+
 # Contains the row, column, and box in which the object is located, the potential solutions to the box, and the final solution once solved
 class Square(Button):
     def __init__(self, **kwargs):
@@ -272,12 +243,78 @@ class DifficultyScreen(Widget):
         print("in callback")
         pages.current = "loading"
         print(pages.current_screen)
+
+        # N.B. The scraping needs to happen on a secondary thread, otherwise
+        # the scraping will happen on the main thread and will block the
+        # screens from changing until AFTER the processing completes. The
+        # Thread target has to be a function/method, NOT a function/method CALL.
+        # That means that the target needs to look like this:
+        # Thread(target=functionName).start()
+        # NOT like this:
+        # Thread(target=functionName()).start()
+        # That means that we can't pass any arguments because we do that via
+        # function/method call. We can work around this by setting the target 
+        # like this:
+        # Thread(target=partial(functionName, passed_variables).start()
+
+        # Scrape puzzle of selected difficulty
+        Thread(target=partial(scrape_puzzle, squares, solved, instance.text)).start()
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         for child in self.options.children:
             child.bind(on_press=self.callback)
+    
+def pb_update(val, *largs):
+    pages.get_screen("loading").children[0].ids.scraping_progress.value=(len(val)/81)*100
+
 class LoadingScreen(Widget):
     progress = ObjectProperty(None)
+
+    def parse_puzzle(self, scraped, browser, dt):
+        number = 0
+        row = 0
+        column = 0
+        box = 0
+        # Parse puzzle
+        for cell in scraped:
+            sq = Square()
+            sq.ID = number
+            sq.row = row
+            sq.column = column
+            sq.box = box
+
+            # Find prefilled squares
+            if cell.accessible_name != "empty":
+                sq.solution = int(cell.accessible_name)
+                sq.possible_solutions = int(cell.accessible_name)
+                sq.background_color = "green"  # Set solved square color to green
+                solved.append(sq)
+
+            # Increment location values as necessary
+            if not (column+1)%3:
+                box = box + 1
+            if column<8:
+                column = column + 1
+            else:
+                column = 0
+                row = row + 1
+
+                if row%3:
+                    box = box-3
+
+            number = number + 1
+            squares.append(sq)
+
+            if len(squares) < 81:
+                Clock.schedule_once(partial(pb_update, squares))
+
+        # Close selenium
+        browser.close()
+
+        # Add scraped puzzle information to Puzzle object 
+        puzzle.create(squares)
+
 class PuzzleScreen(Widget):
     board = ObjectProperty(None)
 
@@ -332,13 +369,13 @@ class SudokuApp(App):
         load_screen = LoadingScreen()
         load_page.add_widget(load_screen)
 
-        # puzz_screen = PuzzleScreen()
-        # puzz_page.add_widget(puzz_screen)
+        puzz_screen = PuzzleScreen()
+        puzz_page.add_widget(puzz_screen)
 
         # Add pages to screen manager
         pages.add_widget(diff_page)
         pages.add_widget(load_page)
-        # pages.add_widget(puzz_page)
+        pages.add_widget(puzz_page)
 
         # Add scraped puzzle to visual representation
         content.create_board()
