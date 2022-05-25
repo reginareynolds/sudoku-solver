@@ -227,7 +227,7 @@ class Puzzle():
 
         # Initiate visual representation creation
         puzz_board = pages.get_screen("puzzle").children[0]
-        puzz_board.create_board()        
+        Thread(target=puzz_board.create_board).start()        
 
 # Contains the row, column, and box in which the object is located, the potential solutions to the box, and the final solution once solved
 class Square(Button):
@@ -242,14 +242,15 @@ class Square(Button):
         self.text = "X"
         self.background_color = "red"
 
+def change_page(new_page, *dt):
+    pages.current = new_page
+
 class DifficultyScreen(Widget):
     options = ObjectProperty(None)
 
     def callback(self, instance):
         # Switch screens to loading screen
-        print("in callback")
-        pages.current = "loading"
-        print(pages.current_screen)
+        change_page("loading")
 
         # N.B. The scraping needs to happen on a secondary thread, otherwise
         # the scraping will happen on the main thread and will block the
@@ -337,15 +338,26 @@ class LoadingScreen(Widget):
 class PuzzleScreen(Widget):
     board = ObjectProperty(None)
 
+    def update_squares(self, square, val, dt):
+        if square.solution != None:
+            square.text = str(square.solution)
+        self.board.children[abs(int(val)-8)].add_widget(square)
+
     # Create initial visual puzzle representation
     def create_board(self):
+        progress = 1
         for key, cells in reversed(puzzle.boxes.items()):
             for cell in cells['squares']:
-                if cell.solution != None:
-                    cell.text=str(cell.solution)
-                self.board.children[abs(int(key)-8)].add_widget(cell)
+                Clock.schedule_once(partial(self.update_squares, cell, key))
+                time.sleep(0.02)
+                Clock.schedule_once(partial(pb_update, progress*(9-int(key))))
+                time.sleep(0.02)
 
-    def update(self, dt):
+                progress = progress + 1
+
+        # Change pages once board is created
+        Clock.schedule_once(partial(change_page, "puzzle"))
+        time.sleep(0.2)
         # Check for if puzzle is solved
         if len(solved) < 81:        
             # Remove solved cell values from potential solutions of cells in the same row/column/box
