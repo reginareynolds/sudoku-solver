@@ -15,6 +15,7 @@ from kivy.uix.button import Button
 from kivy.uix.screenmanager import ScreenManager, Screen
 from kivy.uix.widget import Widget
 
+import os
 import time
 
 # GENERAL PROGRAM OVERVIEW
@@ -38,12 +39,14 @@ def scrape_puzzle(puzzle_squares, solved_cells, difficulty):
     # Prevent browser window from showing
     chrome_options = Options()
     chrome_options.add_argument("--headless")
+    chrome_options.add_argument("--log-level=3")
 
     # Choose URL based on selected difficulty
     site = ''.join(("https://www.nytimes.com/puzzles/sudoku/", difficulty.lower()))
 
+    path = ChromeDriverManager().install()
     # Generate puzzle by scraping NYT sudoku puzzle
-    driver = webdriver.Chrome(ChromeDriverManager().install(), chrome_options=chrome_options)
+    driver = webdriver.Chrome(executable_path=path, chrome_options=chrome_options, service_log_path=os.devnull)
     driver.get(site)
 
     # Wait for page load
@@ -358,8 +361,12 @@ class PuzzleScreen(Widget):
         # Change pages once board is created
         Clock.schedule_once(partial(change_page, "puzzle"))
         time.sleep(0.2)
+
+        Thread(target=self.update).start()
+
+    def update(self):
         # Check for if puzzle is solved
-        if len(solved) < 81:        
+        while len(solved) < 81:
             # Remove solved cell values from potential solutions of cells in the same row/column/box
             for cell in solved:
                 # Same row
@@ -408,13 +415,6 @@ class SudokuApp(App):
         pages.add_widget(load_page)
         pages.add_widget(puzz_page)
 
-        # Add scraped puzzle to visual representation
-        content.create_board()
-
-        Clock.schedule_interval(content.update, 5.0)
-        
-        return content
-
         return pages
 
 if __name__ == '__main__':
@@ -451,5 +451,4 @@ if __name__ == '__main__':
 # 5 7 4
 # In the above example, A and B can both be 8 or 9, and C and D can both be 8 or 9. 
 
-# TODO: Allow user to select sudoku difficulty level, then scrape based on selection
 # TODO: implement progress bar to show percentage solved
