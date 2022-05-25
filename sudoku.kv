@@ -86,7 +86,8 @@
         # # top: self.height
         # # center_x: root.width/2
 
-        Button:
+        Label:
+            id: loading_text
             text: "Scraping puzzle..."
             font_size: 50
 
@@ -97,7 +98,6 @@
             size_hint_y: None
             height: root.top/4
             center_y: (root.height-80)*3/4
-            on_press: print(root.top, self.center_y, self.top)
             
 
         ProgressBar:
@@ -106,7 +106,7 @@
             width: root.width*2/3
             center_x: root.width/2
             center_y: (root.top-80)*1/2 #*3/4-80
-
+            max: 81
 
     # GridLayout:
     #     top: root.top - 10
@@ -147,6 +147,8 @@
     #             size_hint_x: None
     #             width: root.width*2/3
     #             # center_x: root.width/2
+
+
 
 <PuzzleScreen>:
     board: boxes

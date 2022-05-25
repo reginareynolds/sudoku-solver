@@ -15,6 +15,7 @@ from kivy.uix.button import Button
 from kivy.uix.screenmanager import ScreenManager, Screen
 from kivy.uix.widget import Widget
 
+import time
 
 # GENERAL PROGRAM OVERVIEW
 # 1. Scrape sudoku puzzle from New York Times
@@ -55,7 +56,7 @@ def scrape_puzzle(puzzle_squares, solved_cells, difficulty):
         # N.B. Square class object can't be created in a new thread because
         # Kivy graphics creation must happen in the main thread
         loading = pages.get_screen("loading").children[0]
-        Clock.schedule_once(partial(loading.parse_puzzle, cells, driver))
+        Thread(target=partial(loading.parse_puzzle, cells, driver)).start()
 
 # Remove solved cell values from potential solutions of cells in same grouping
 def remove_same(grouping, index, solution, solved_list):    
@@ -218,9 +219,15 @@ class Puzzle():
             self.boxes[str(loop)] = box
 
             loop = loop + 1
+            Clock.schedule_once(partial(pb_update, loop))
+            time.sleep(.03)
 
-        # Initiate board creation
-        pages.get_screen("puzzle").children[0].create_board()        
+        Clock.schedule_once(partial(change_screen, "Creating game board...", 81))
+        time.sleep(0.02)
+
+        # Initiate visual representation creation
+        puzz_board = pages.get_screen("puzzle").children[0]
+        puzz_board.create_board()        
 
 # Contains the row, column, and box in which the object is located, the potential solutions to the box, and the final solution once solved
 class Square(Button):
@@ -265,20 +272,28 @@ class DifficultyScreen(Widget):
         for child in self.options.children:
             child.bind(on_press=self.callback)
     
-def pb_update(val, *largs):
-    pages.get_screen("loading").children[0].ids.scraping_progress.value=(len(val)/81)*100
+def change_screen(val, new_max, dt):
+    new_screen = pages.get_screen("loading").children[0]
+    new_screen.ids.scraping_progress.value = 0
+    new_screen.ids.scraping_progress.max = new_max
+    new_screen.ids.loading_text.text = val
+
+def pb_update(val, dt):
+    pages.get_screen("loading").children[0].ids.scraping_progress.value=val
+    print("pb_update")
+    print(dt)
 
 class LoadingScreen(Widget):
     progress = ObjectProperty(None)
 
-    def parse_puzzle(self, scraped, browser, dt):
+    def parse_puzzle(self, scraped, browser):
         number = 0
         row = 0
         column = 0
         box = 0
         # Parse puzzle
         for cell in scraped:
-            sq = Square()
+            sq = squares[number]
             sq.ID = number
             sq.row = row
             sq.column = column
@@ -304,16 +319,20 @@ class LoadingScreen(Widget):
                     box = box-3
 
             number = number + 1
-            squares.append(sq)
 
-            if len(squares) < 81:
-                Clock.schedule_once(partial(pb_update, squares))
+            Clock.schedule_once(partial(pb_update, number))
+            print("sleeping")
+            time.sleep(0.02)
 
         # Close selenium
         browser.close()
 
+        # Update loading screen text
+        Clock.schedule_once(partial(change_screen, "Parsing puzzle...", 9))
+        time.sleep(0.1)
+
         # Add scraped puzzle information to Puzzle object 
-        puzzle.create(squares)
+        Thread(target=partial(puzzle.create, squares)).start()
 
 class PuzzleScreen(Widget):
     board = ObjectProperty(None)
@@ -393,9 +412,10 @@ if __name__ == '__main__':
     puzzle = Puzzle()  # Puzzle object
 
     pages = ScreenManager()
-    # Read puzzle information and add to Puzzle object
-    scrape_puzzle(squares, solved)
-    puzzle.create(squares)
+
+    # Create squares list to avoid future threading problems
+    for i in range(81):
+        squares.append(Square())
 
     app=SudokuApp()
     app.run()
