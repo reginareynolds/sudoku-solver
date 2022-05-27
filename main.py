@@ -62,7 +62,7 @@ def scrape_puzzle(puzzle_squares, solved_cells, difficulty):
         Thread(target=partial(loading.parse_puzzle, cells, driver)).start()
 
 # Remove solved cell values from potential solutions of cells in same grouping
-def remove_same(grouping, index, solution, solved_list):    
+def remove_same(grouping, index, solution, solved_list, *dt):    
     for cell in grouping[str(index)]["squares"]:
         # Ignore solved cells
         if not cell.solution:
@@ -75,6 +75,7 @@ def remove_same(grouping, index, solution, solved_list):
                     cell.solution = int(cell.possible_solutions[0])
                     cell.possible_solutions = int(cell.possible_solutions[0])
                     cell.background_color = "green"
+                    cell.text = str(cell.solution)
 
                     # Remove newly solved cell value from grouping's unsolved value list    
                     puzzle.rows[str(cell.row)]["unsolved"].pop(str(cell.solution), None)
@@ -83,7 +84,7 @@ def remove_same(grouping, index, solution, solved_list):
                     solved_list.append(cell)    
 
 # Find unsolved group values 
-def find_unsolved(grouping, solved_list, box_group = False):
+def find_unsolved(grouping, solved_list, dt, box_group = False):
     for key, group in grouping.items():
         # What cells can contain each unsolved value?
 
@@ -107,6 +108,7 @@ def find_unsolved(grouping, solved_list, box_group = False):
                 frequency[0].solution = int(num)
                 frequency[0].possible_solutions = int(num)
                 frequency[0].background_color = "green"
+                frequency[0].text = str(frequency[0].solution)
                 solved_list.append(frequency[0])
 
                 remove_same(puzzle.rows, frequency[0].row, frequency[0].solution, solved_list)
@@ -341,17 +343,18 @@ class LoadingScreen(Widget):
 class PuzzleScreen(Widget):
     board = ObjectProperty(None)
 
-    def update_squares(self, square, val, dt):
+    def update_squares(self, square, dt, val=None):
         if square.solution != None:
             square.text = str(square.solution)
-        self.board.children[abs(int(val)-8)].add_widget(square)
+        if val:
+            self.board.children[abs(int(val)-8)].add_widget(square)
 
     # Create initial visual puzzle representation
     def create_board(self):
         progress = 1
         for key, cells in reversed(puzzle.boxes.items()):
             for cell in cells['squares']:
-                Clock.schedule_once(partial(self.update_squares, cell, key))
+                Clock.schedule_once(partial(self.update_squares, cell, val=key))
                 time.sleep(0.02)
                 Clock.schedule_once(partial(pb_update, progress*(9-int(key))))
                 time.sleep(0.02)
@@ -370,29 +373,29 @@ class PuzzleScreen(Widget):
             # Remove solved cell values from potential solutions of cells in the same row/column/box
             for cell in solved:
                 # Same row
-                remove_same(puzzle.rows, cell.row, cell.solution, solved)
+                Clock.schedule_once(partial(remove_same, puzzle.rows, cell.row, cell.solution, solved))
 
                 # Same column
-                remove_same(puzzle.columns, cell.column, cell.solution, solved)
+                Clock.schedule_once(partial(remove_same, puzzle.columns, cell.column, cell.solution, solved))
 
                 # Same box
-                remove_same(puzzle.boxes, cell.box, cell.solution, solved)
+                Clock.schedule_once(partial(remove_same, puzzle.boxes, cell.box, cell.solution, solved))
 
             # Further processing is required
             
             # Find unsolved row values 
-            find_unsolved(puzzle.rows, solved)
+            Clock.schedule_once(partial(find_unsolved, puzzle.rows, solved))
 
             # Find unsolved column values
-            find_unsolved(puzzle.columns, solved)  
+            Clock.schedule_once(partial(find_unsolved, puzzle.columns, solved))
 
             # Find unsolved box values
-            find_unsolved(puzzle.boxes, solved, box_group = True)
+            Clock.schedule_once(partial(find_unsolved, puzzle.boxes, solved, box_group = True))
 
             for key, cells in reversed(puzzle.boxes.items()):
                 for cell in cells['squares']:
-                    if cell.solution != None:
-                        cell.text=str(cell.solution)
+                    Clock.schedule_once(partial(self.update_squares, cell))
+                    time.sleep(0.02)
 
 class SudokuApp(App):
     def build(self):
