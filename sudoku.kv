@@ -15,54 +15,49 @@
 <DifficultyScreen>:
     options: difficulty_selection
 
-    GridLayout:
-        top: root.top - 10
-        cols: 1
-        rows: 2
-        width: root.width
-        padding: [0, 20, 0, 0]
-        spacing: [0, 20]
+    Label:
+        text: "Sudoku"
+        font_size: 70
+        center_x: root.width/2
+        top: root.top-10
+        height: 70
+
+    RelativeLayout:
 
         Label:
-            text: "Sudoku"
-            font_size: 70
+            text: "Select a difficulty"
+            font_size: 50
+
+            size_hint_x: None
+            width: root.width*2/3            
             center_x: root.width/2
-            top: root.top 
-            height: 70
+            
+            size_hint_y: None
+            height: root.top/4
+            center_y: (root.height-80)*3/4
 
         GridLayout:
-            # pos_hint: {'top': 0.4}
-            top: root.top - 100
-            width: root.width
-            cols: 1
-            rows: 2
-            row_default_height: (root.top-85)/4
-
-            Label:
-                text: "Select a difficulty"
-                font_size: 50
-                center_x: root.width/2
-                top: root.top 
-                height: 50    
-
-            GridLayout:
-                top: root.top
-                width: root.width/2
-                column_default_width: root.width/2
-                cols: 3
-                rows: 1
-                padding: 2
-                orientation: 'lr-tb'
-                id: difficulty_selection
-
-                Button:
-                    text: "Easy"
+            id: difficulty_selection
+            cols: 3
+            padding: 2
+            orientation: 'lr-tb'
             
-                Button:
-                    text: "Medium"
+            size_hint_x: None
+            width: root.width*2/3            
+            center_x: root.width/2
+            
+            size_hint_y: None
+            height: (root.top-85)/4
+            center_y: (root.height-80)*1/2
 
-                Button:
-                    text: "Hard"
+            Button:
+                text: "Easy"
+        
+            Button:
+                text: "Medium"
+
+            Button:
+                text: "Hard"
 
 <LoadingScreen>:
     progress: scraping_progress
@@ -71,20 +66,10 @@
         text: "Sudoku"
         font_size: 70
         center_x: root.width/2
-        top: root.top 
+        top: root.top-10
         height: 70
 
     RelativeLayout:
-        # background_color: "red"
-        # cols: 1
-        # row_force_default: True
-        # row_default_height: (root.top-85)/4
-        # # pos_hint: {'center_x': 0.5}
-        # size_hint: (None, None)
-        # # size: self.minimum_size
-        # top: root.top - 100
-        # # top: self.height
-        # # center_x: root.width/2
 
         Label:
             id: loading_text
@@ -108,77 +93,29 @@
             center_y: (root.top-80)*1/2 #*3/4-80
             max: 81
 
-    # GridLayout:
-    #     top: root.top - 10
-    #     cols: 1
-    #     rows: 2
-    #     width: root.width
-    #     padding: [0, 20, 0, 0]
-    #     spacing: [0, 20]
-
-    #     Label:
-    #         text: "Sudoku"
-    #         font_size: 70
-    #         center_x: root.width/2
-    #         top: root.top 
-    #         height: 70
-
-    #     GridLayout:
-    #         cols: 1
-    #         row_force_default: True
-    #         row_default_height: (root.top-85)/4
-    #         pos_hint: {'center_x': 0.5}
-    #         size_hint: (None, None)
-    #         size: self.minimum_size
-    #         # top: root.top - 100
-    #         top: self.height
-    #         # center_x: root.width/2
-
-    #         Button:
-    #             text: "Scraping puzzle..."
-    #             font_size: 50
-    #             size_hint_x: None
-    #             width: root.width*2/3
-    #             # center_x: root.width*3/4
-    #             on_press: print(root.width, self.center_x, self.width)
-                
-
-    #         ProgressBar:
-    #             size_hint_x: None
-    #             width: root.width*2/3
-    #             # center_x: root.width/2
-
-
-
 <PuzzleScreen>:
     board: boxes
-    
-    GridLayout:
-        top: root.top - 10
-        cols: 1
-        rows: 2
-        width: root.width
-        padding: [0, 20, 0, 0]
-        spacing: [0, 20]
 
-        Label:
-            text: "Sudoku"
-            font_size: 70
-            center_x: root.width/2
-            top: root.top 
-            height: 70
+    Label:
+        text: "Sudoku"
+        font_size: 70
+        center_x: root.width/2
+        top: root.top-10
+        height: 70
         
-        Board:
-            id: boxes
-            top: root.top
-            row_default_height: (root.top-85)/3
+    Board:
+        id: boxes
+        top: root.top - 80
+        width: root.width
+        row_default_height: (root.top-90)/3
+        padding: 5
 
-            Board:
-            Board:
-            Board:
-            Board:
-            Board:
-            Board:
-            Board:
-            Board:
-            Board:
+        Board:
+        Board:
+        Board:
+        Board:
+        Board:
+        Board:
+        Board:
+        Board:
+        Board:
