@@ -35,7 +35,7 @@ import time
 # If the puzzle is still not solved at that point, further processing is necessary.
 
 # Scrape sudoku puzzle from New York Times site
-def scrape_puzzle(puzzle_squares, solved_cells, difficulty):    
+def scrape_puzzle(difficulty):    
     # Prevent browser window from showing
     chrome_options = Options()
     chrome_options.add_argument("--headless")
@@ -271,7 +271,7 @@ class DifficultyScreen(Widget):
         # Thread(target=partial(functionName, passed_variables).start()
 
         # Scrape puzzle of selected difficulty
-        Thread(target=partial(scrape_puzzle, squares, solved, instance.text)).start()
+        Thread(target=partial(scrape_puzzle, instance.text)).start()
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -286,8 +286,6 @@ def change_screen(val, new_max, dt):
 
 def pb_update(val, dt):
     pages.get_screen("loading").children[0].ids.scraping_progress.value=val
-    print("pb_update")
-    print(dt)
 
 class LoadingScreen(Widget):
     progress = ObjectProperty(None)
@@ -327,7 +325,6 @@ class LoadingScreen(Widget):
             number = number + 1
 
             Clock.schedule_once(partial(pb_update, number))
-            print("sleeping")
             time.sleep(0.02)
 
         # Close selenium
@@ -355,7 +352,6 @@ class PuzzleScreen(Widget):
         for key, cells in reversed(puzzle.boxes.items()):
             for cell in cells['squares']:
                 Clock.schedule_once(partial(self.update_squares, cell, val=key))
-                time.sleep(0.02)
                 Clock.schedule_once(partial(pb_update, progress*(9-int(key))))
                 time.sleep(0.02)
 
@@ -363,7 +359,6 @@ class PuzzleScreen(Widget):
 
         # Change pages once board is created
         Clock.schedule_once(partial(change_page, "puzzle"))
-        time.sleep(0.2)
 
         Thread(target=self.update).start()
 
