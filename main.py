@@ -58,7 +58,7 @@ def scrape_puzzle(difficulty):
 
         # N.B. Square class object can't be created in a new thread because
         # Kivy graphics creation must happen in the main thread
-        loading = pages.get_screen("loading").children[0]
+        loading = app.pages.carousel.current_slide
         Thread(target=partial(loading.parse_puzzle, cells, driver)).start()
 
 # Remove solved cell values from potential solutions of cells in same grouping
@@ -231,7 +231,7 @@ class Puzzle():
         time.sleep(0.02)
 
         # Initiate visual representation creation
-        puzz_board = pages.get_screen("puzzle").children[0]
+        puzz_board = app.pages.carousel.slides[2]
         Thread(target=puzz_board.create_board).start()        
 
 # Contains the row, column, and box in which the object is located, the potential solutions to the box, and the final solution once solved
@@ -247,15 +247,16 @@ class Square(Button):
         self.text = "X"
         self.background_color = "red"
 
+# Change slide displayed in carousel
 def change_page(new_page, *dt):
-    pages.current = new_page
+    app.pages.carousel.load_slide(app.pages.carousel.slides[new_page])
 
 class DifficultyScreen(Widget):
     options = ObjectProperty(None)
 
     def callback(self, instance):
         # Switch screens to loading screen
-        change_page("loading")
+        change_page(1)
 
         # N.B. The scraping needs to happen on a secondary thread, otherwise
         # the scraping will happen on the main thread and will block the
@@ -279,13 +280,13 @@ class DifficultyScreen(Widget):
             child.bind(on_press=self.callback)
     
 def change_screen(val, new_max, dt):
-    new_screen = pages.get_screen("loading").children[0]
+    new_screen = app.pages.carousel.slides[1]
     new_screen.ids.scraping_progress.value = 0
     new_screen.ids.scraping_progress.max = new_max
     new_screen.ids.loading_text.text = val
 
 def pb_update(val, dt):
-    pages.get_screen("loading").children[0].ids.scraping_progress.value=val
+    app.pages.carousel.current_slide.ids.scraping_progress.value=val
 
 class LoadingScreen(Widget):
     progress = ObjectProperty(None)
@@ -358,7 +359,7 @@ class PuzzleScreen(Widget):
                 progress = progress + 1
 
         # Change pages once board is created
-        Clock.schedule_once(partial(change_page, "puzzle"))
+        Clock.schedule_once(partial(change_page, 2))
 
         Thread(target=self.update).start()
 
@@ -392,36 +393,31 @@ class PuzzleScreen(Widget):
                     Clock.schedule_once(partial(self.update_squares, cell))
                     time.sleep(0.02)
 
+class FrameScreen(Widget):
+    carousel = ObjectProperty(None)
+
+
 class SudokuApp(App):
     def build(self):
-        diff_page = Screen(name="difficulty")
-        load_page = Screen(name="loading")
-        puzz_page = Screen(name="puzzle")
+        self.pages = FrameScreen()
 
-        # Initialize difficulty selection screen and add to page
+        # Initialize different screens
         diff_screen = DifficultyScreen()
-        diff_page.add_widget(diff_screen)
-
         load_screen = LoadingScreen()
-        load_page.add_widget(load_screen)
-
         puzz_screen = PuzzleScreen()
-        puzz_page.add_widget(puzz_screen)
 
-        # Add pages to screen manager
-        pages.add_widget(diff_page)
-        pages.add_widget(load_page)
-        pages.add_widget(puzz_page)
+        # Add screens to carousel
+        self.pages.carousel.add_widget(diff_screen)
+        self.pages.carousel.add_widget(load_screen)
+        self.pages.carousel.add_widget(puzz_screen)
 
-        return pages
+        return self.pages
 
 if __name__ == '__main__':
     # Initialize globals
     squares = []  # List of squares in puzzle
     solved = []  # List of solved cells
     puzzle = Puzzle()  # Puzzle object
-
-    pages = ScreenManager()
 
     # Create squares list to avoid future threading problems
     for i in range(81):
