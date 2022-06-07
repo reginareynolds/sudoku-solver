@@ -450,3 +450,4 @@ if __name__ == '__main__':
 # In the above example, A and B can both be 8 or 9, and C and D can both be 8 or 9. 
 
 # TODO: implement progress bar to show percentage solved
+# TODO: Replace screens with Carousel object
