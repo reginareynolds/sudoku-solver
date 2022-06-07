@@ -1,3 +1,5 @@
+from functools import partial
+from threading import Thread
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
@@ -8,10 +10,13 @@ from webdriver_manager.chrome import ChromeDriverManager
 from kivy.app import App
 from kivy.clock import Clock
 from kivy.properties import ObjectProperty
-# from kivy.uix.progressbar import ProgressBar
+from kivy.uix.progressbar import ProgressBar
 from kivy.uix.button import Button
+from kivy.uix.screenmanager import ScreenManager, Screen
 from kivy.uix.widget import Widget
 
+import os
+import time
 
 # GENERAL PROGRAM OVERVIEW
 # 1. Scrape sudoku puzzle from New York Times
@@ -30,14 +35,19 @@ from kivy.uix.widget import Widget
 # If the puzzle is still not solved at that point, further processing is necessary.
 
 # Scrape sudoku puzzle from New York Times site
-def scrape_puzzle(puzzle_squares, solved_cells):
+def scrape_puzzle(difficulty):    
     # Prevent browser window from showing
     chrome_options = Options()
     chrome_options.add_argument("--headless")
+    chrome_options.add_argument("--log-level=3")
 
+    # Choose URL based on selected difficulty
+    site = ''.join(("https://www.nytimes.com/puzzles/sudoku/", difficulty.lower()))
+
+    path = ChromeDriverManager().install()
     # Generate puzzle by scraping NYT sudoku puzzle
-    driver = webdriver.Chrome(ChromeDriverManager().install(), chrome_options=chrome_options)
-    driver.get("https://www.nytimes.com/puzzles/sudoku/hard")
+    driver = webdriver.Chrome(executable_path=path, chrome_options=chrome_options, service_log_path=os.devnull)
+    driver.get(site)
 
     # Wait for page load
     try:
@@ -46,45 +56,13 @@ def scrape_puzzle(puzzle_squares, solved_cells):
         # Get squares
         cells = page.find_elements(By.CLASS_NAME, "su-cell")
 
-    number = 0
-    row = 0
-    column = 0
-    box = 0
-    # Parse puzzle
-    for cell in cells:
-        sq = Square()
-        sq.ID = number
-        sq.row = row
-        sq.column = column
-        sq.box = box
-
-        # Find prefilled squares
-        if cell.accessible_name != "empty":
-            sq.solution = int(cell.accessible_name)
-            sq.possible_solutions = int(cell.accessible_name)
-            sq.background_color = "green"  # Set solved square color to green
-            solved_cells.append(sq)
-
-        # Increment location values as necessary
-        if not (column+1)%3:
-            box = box + 1
-        if column<8:
-            column = column + 1
-        else:
-            column = 0
-            row = row + 1
-
-            if row%3:
-                box = box-3
-
-        number = number + 1
-        puzzle_squares.append(sq)
-
-    # Close selenium
-    driver.close()
+        # N.B. Square class object can't be created in a new thread because
+        # Kivy graphics creation must happen in the main thread
+        loading = pages.get_screen("loading").children[0]
+        Thread(target=partial(loading.parse_puzzle, cells, driver)).start()
 
 # Remove solved cell values from potential solutions of cells in same grouping
-def remove_same(grouping, index, solution, solved_list):    
+def remove_same(grouping, index, solution, solved_list, *dt):    
     for cell in grouping[str(index)]["squares"]:
         # Ignore solved cells
         if not cell.solution:
@@ -97,6 +75,7 @@ def remove_same(grouping, index, solution, solved_list):
                     cell.solution = int(cell.possible_solutions[0])
                     cell.possible_solutions = int(cell.possible_solutions[0])
                     cell.background_color = "green"
+                    cell.text = str(cell.solution)
 
                     # Remove newly solved cell value from grouping's unsolved value list    
                     puzzle.rows[str(cell.row)]["unsolved"].pop(str(cell.solution), None)
@@ -105,7 +84,7 @@ def remove_same(grouping, index, solution, solved_list):
                     solved_list.append(cell)    
 
 # Find unsolved group values 
-def find_unsolved(grouping, solved_list, box_group = False):
+def find_unsolved(grouping, solved_list, dt, box_group = False):
     for key, group in grouping.items():
         # What cells can contain each unsolved value?
 
@@ -129,6 +108,7 @@ def find_unsolved(grouping, solved_list, box_group = False):
                 frequency[0].solution = int(num)
                 frequency[0].possible_solutions = int(num)
                 frequency[0].background_color = "green"
+                frequency[0].text = str(frequency[0].solution)
                 solved_list.append(frequency[0])
 
                 remove_same(puzzle.rows, frequency[0].row, frequency[0].solution, solved_list)
@@ -244,6 +224,15 @@ class Puzzle():
             self.boxes[str(loop)] = box
 
             loop = loop + 1
+            Clock.schedule_once(partial(pb_update, loop))
+            time.sleep(.03)
+
+        Clock.schedule_once(partial(change_screen, "Creating game board...", 81))
+        time.sleep(0.02)
+
+        # Initiate visual representation creation
+        puzz_board = pages.get_screen("puzzle").children[0]
+        Thread(target=puzz_board.create_board).start()        
 
 # Contains the row, column, and box in which the object is located, the potential solutions to the box, and the final solution once solved
 class Square(Button):
@@ -258,58 +247,173 @@ class Square(Button):
         self.text = "X"
         self.background_color = "red"
 
-class Screen(Widget):
+def change_page(new_page, *dt):
+    pages.current = new_page
+
+class DifficultyScreen(Widget):
+    options = ObjectProperty(None)
+
+    def callback(self, instance):
+        # Switch screens to loading screen
+        change_page("loading")
+
+        # N.B. The scraping needs to happen on a secondary thread, otherwise
+        # the scraping will happen on the main thread and will block the
+        # screens from changing until AFTER the processing completes. The
+        # Thread target has to be a function/method, NOT a function/method CALL.
+        # That means that the target needs to look like this:
+        # Thread(target=functionName).start()
+        # NOT like this:
+        # Thread(target=functionName()).start()
+        # That means that we can't pass any arguments because we do that via
+        # function/method call. We can work around this by setting the target 
+        # like this:
+        # Thread(target=partial(functionName, passed_variables).start()
+
+        # Scrape puzzle of selected difficulty
+        Thread(target=partial(scrape_puzzle, instance.text)).start()
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        for child in self.options.children:
+            child.bind(on_press=self.callback)
+    
+def change_screen(val, new_max, dt):
+    new_screen = pages.get_screen("loading").children[0]
+    new_screen.ids.scraping_progress.value = 0
+    new_screen.ids.scraping_progress.max = new_max
+    new_screen.ids.loading_text.text = val
+
+def pb_update(val, dt):
+    pages.get_screen("loading").children[0].ids.scraping_progress.value=val
+
+class LoadingScreen(Widget):
+    progress = ObjectProperty(None)
+
+    def parse_puzzle(self, scraped, browser):
+        number = 0
+        row = 0
+        column = 0
+        box = 0
+        # Parse puzzle
+        for cell in scraped:
+            sq = squares[number]
+            sq.ID = number
+            sq.row = row
+            sq.column = column
+            sq.box = box
+
+            # Find prefilled squares
+            if cell.accessible_name != "empty":
+                sq.solution = int(cell.accessible_name)
+                sq.possible_solutions = int(cell.accessible_name)
+                sq.background_color = "green"  # Set solved square color to green
+                solved.append(sq)
+
+            # Increment location values as necessary
+            if not (column+1)%3:
+                box = box + 1
+            if column<8:
+                column = column + 1
+            else:
+                column = 0
+                row = row + 1
+
+                if row%3:
+                    box = box-3
+
+            number = number + 1
+
+            Clock.schedule_once(partial(pb_update, number))
+            time.sleep(0.02)
+
+        # Close selenium
+        browser.close()
+
+        # Update loading screen text
+        Clock.schedule_once(partial(change_screen, "Parsing puzzle...", 9))
+        time.sleep(0.1)
+
+        # Add scraped puzzle information to Puzzle object 
+        Thread(target=partial(puzzle.create, squares)).start()
+
+class PuzzleScreen(Widget):
     board = ObjectProperty(None)
+
+    def update_squares(self, square, dt, val=None):
+        if square.solution != None:
+            square.text = str(square.solution)
+        if val:
+            self.board.children[abs(int(val)-8)].add_widget(square)
 
     # Create initial visual puzzle representation
     def create_board(self):
+        progress = 1
         for key, cells in reversed(puzzle.boxes.items()):
             for cell in cells['squares']:
-                if cell.solution != None:
-                    cell.text=str(cell.solution)
-                self.board.children[abs(int(key)-8)].add_widget(cell)
+                Clock.schedule_once(partial(self.update_squares, cell, val=key))
+                Clock.schedule_once(partial(pb_update, progress*(9-int(key))))
+                time.sleep(0.02)
 
-    def update(self, dt):
+                progress = progress + 1
+
+        # Change pages once board is created
+        Clock.schedule_once(partial(change_page, "puzzle"))
+
+        Thread(target=self.update).start()
+
+    def update(self):
         # Check for if puzzle is solved
-        if len(solved) < 81:        
+        while len(solved) < 81:
             # Remove solved cell values from potential solutions of cells in the same row/column/box
             for cell in solved:
                 # Same row
-                remove_same(puzzle.rows, cell.row, cell.solution, solved)
+                Clock.schedule_once(partial(remove_same, puzzle.rows, cell.row, cell.solution, solved))
 
                 # Same column
-                remove_same(puzzle.columns, cell.column, cell.solution, solved)
+                Clock.schedule_once(partial(remove_same, puzzle.columns, cell.column, cell.solution, solved))
 
                 # Same box
-                remove_same(puzzle.boxes, cell.box, cell.solution, solved)
+                Clock.schedule_once(partial(remove_same, puzzle.boxes, cell.box, cell.solution, solved))
 
             # Further processing is required
             
             # Find unsolved row values 
-            find_unsolved(puzzle.rows, solved)
+            Clock.schedule_once(partial(find_unsolved, puzzle.rows, solved))
 
             # Find unsolved column values
-            find_unsolved(puzzle.columns, solved)  
+            Clock.schedule_once(partial(find_unsolved, puzzle.columns, solved))
 
             # Find unsolved box values
-            find_unsolved(puzzle.boxes, solved, box_group = True)
+            Clock.schedule_once(partial(find_unsolved, puzzle.boxes, solved, box_group = True))
 
             for key, cells in reversed(puzzle.boxes.items()):
                 for cell in cells['squares']:
-                    if cell.solution != None:
-                        cell.text=str(cell.solution)
+                    Clock.schedule_once(partial(self.update_squares, cell))
+                    time.sleep(0.02)
 
 class SudokuApp(App):
     def build(self):
-        content = Screen()
+        diff_page = Screen(name="difficulty")
+        load_page = Screen(name="loading")
+        puzz_page = Screen(name="puzzle")
 
-        # Add scraped puzzle to visual representation
-        content.create_board()
+        # Initialize difficulty selection screen and add to page
+        diff_screen = DifficultyScreen()
+        diff_page.add_widget(diff_screen)
 
-        Clock.schedule_interval(content.update, 5.0)
-        
-        return content
+        load_screen = LoadingScreen()
+        load_page.add_widget(load_screen)
 
+        puzz_screen = PuzzleScreen()
+        puzz_page.add_widget(puzz_screen)
+
+        # Add pages to screen manager
+        pages.add_widget(diff_page)
+        pages.add_widget(load_page)
+        pages.add_widget(puzz_page)
+
+        return pages
 
 if __name__ == '__main__':
     # Initialize globals
@@ -317,9 +421,11 @@ if __name__ == '__main__':
     solved = []  # List of solved cells
     puzzle = Puzzle()  # Puzzle object
 
-    # Read puzzle information and add to Puzzle object
-    scrape_puzzle(squares, solved)
-    puzzle.create(squares)
+    pages = ScreenManager()
+
+    # Create squares list to avoid future threading problems
+    for i in range(81):
+        squares.append(Square())
 
     app=SudokuApp()
     app.run()
@@ -342,3 +448,5 @@ if __name__ == '__main__':
 # 3 6 1
 # 5 7 4
 # In the above example, A and B can both be 8 or 9, and C and D can both be 8 or 9. 
+
+# TODO: implement progress bar to show percentage solved
