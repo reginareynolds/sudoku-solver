@@ -12,9 +12,8 @@
     padding: 2
     orientation: 'lr-tb'
 
-<DifficultyScreen>:
-    options: difficulty_selection
-
+<FrameScreen>:
+    carousel: screen_selection
     Label:
         text: "Sudoku"
         font_size: 70
@@ -23,91 +22,90 @@
         height: 70
 
     RelativeLayout:
-
-        Label:
-            text: "Select a difficulty"
-            font_size: 50
+        Carousel:
+            id: screen_selection
+            direction: "right"
+            scroll_timeout: 0
 
             size_hint_x: None
-            width: root.width*2/3            
+            width: root.width
             center_x: root.width/2
             
             size_hint_y: None
-            height: root.top/4
-            center_y: (root.height-80)*3/4
+            height: root.top-100
+            center_y: (root.height-100)*1/2     
 
-        GridLayout:
-            id: difficulty_selection
-            cols: 3
-            padding: 2
-            orientation: 'lr-tb'
-            
-            size_hint_x: None
-            width: root.width*2/3            
-            center_x: root.width/2
-            
-            size_hint_y: None
-            height: (root.top-85)/4
-            center_y: (root.height-80)*1/2
+<DifficultyScreen>:
+    options: difficulty_selection
 
-            Button:
-                text: "Easy"
+    Label:
+        text: "Select a difficulty"
+        font_size: 50
+
+        size_hint_x: None
+        width: root.width*2/3
+        center_x: root.width/2
         
-            Button:
-                text: "Medium"
+        size_hint_y: None
+        height: root.top/4
+        center_y: (3*root.height+60)/4
 
-            Button:
-                text: "Hard"
+    GridLayout:
+        id: difficulty_selection
+        cols: 3
+        padding: 2
+        orientation: 'lr-tb'
+        
+        size_hint_x: None
+        width: root.width*2/3
+        center_x: root.width/2
+        
+        size_hint_y: None
+        height: (root.top-85)/4
+        center_y: (root.height+20)/2
+
+        Button:
+            text: "Easy"
+    
+        Button:
+            text: "Medium"
+
+        Button:
+            text: "Hard"
 
 <LoadingScreen>:
     progress: scraping_progress
 
     Label:
-        text: "Sudoku"
-        font_size: 70
+        id: loading_text
+        text: "Scraping puzzle..."
+        font_size: 50
+
+        size_hint_x: None
+        width: root.width*2/3
         center_x: root.width/2
-        top: root.top-10
-        height: 70
 
-    RelativeLayout:
+        size_hint_y: None
+        height: root.top/4
+        center_y: (3*root.height+60)/4
+        
 
-        Label:
-            id: loading_text
-            text: "Scraping puzzle..."
-            font_size: 50
-
-            size_hint_x: None
-            width: root.width*2/3
-            center_x: root.width/2
-
-            size_hint_y: None
-            height: root.top/4
-            center_y: (root.height-80)*3/4
-            
-
-        ProgressBar:
-            id: scraping_progress
-            size_hint_x: None
-            width: root.width*2/3
-            center_x: root.width/2
-            center_y: (root.top-80)*1/2 #*3/4-80
-            max: 81
+    ProgressBar:
+        id: scraping_progress
+        size_hint_x: None
+        width: root.width*2/3
+        center_x: root.width/2
+        center_y: (root.height+20)/2
+        max: 81
 
 <PuzzleScreen>:
     board: boxes
 
-    Label:
-        text: "Sudoku"
-        font_size: 70
-        center_x: root.width/2
-        top: root.top-10
-        height: 70
-        
     Board:
         id: boxes
-        top: root.top - 80
+        top: root.top
         width: root.width
-        row_default_height: (root.top-90)/3
+        row_default_height: (root.top-10)/3
         padding: 5
 
         Board:

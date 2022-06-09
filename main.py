@@ -1,3 +1,5 @@
+import os
+import time
 from functools import partial
 from threading import Thread
 from selenium import webdriver
@@ -15,8 +17,6 @@ from kivy.uix.button import Button
 from kivy.uix.screenmanager import ScreenManager, Screen
 from kivy.uix.widget import Widget
 
-import os
-import time
 
 # GENERAL PROGRAM OVERVIEW
 # 1. Scrape sudoku puzzle from New York Times
@@ -34,8 +34,8 @@ import time
 # If an unsolved value in a group (row, column, box) has only one possible group cell it can appear in, it must appear in that cell.
 # If the puzzle is still not solved at that point, further processing is necessary.
 
-# Scrape sudoku puzzle from New York Times site
-def scrape_puzzle(difficulty):    
+def scrape_puzzle(difficulty):
+    """Scrape sudoku puzzle from New York Times site"""
     # Prevent browser window from showing
     chrome_options = Options()
     chrome_options.add_argument("--headless")
@@ -49,6 +49,8 @@ def scrape_puzzle(difficulty):
     driver = webdriver.Chrome(executable_path=path, chrome_options=chrome_options, service_log_path=os.devnull)
     driver.get(site)
 
+    # Initialize variable
+    page = None
     # Wait for page load
     try:
         page = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CLASS_NAME, "su-board")))
@@ -58,11 +60,11 @@ def scrape_puzzle(difficulty):
 
         # N.B. Square class object can't be created in a new thread because
         # Kivy graphics creation must happen in the main thread
-        loading = pages.get_screen("loading").children[0]
+        loading = app.pages.carousel.current_slide
         Thread(target=partial(loading.parse_puzzle, cells, driver)).start()
 
-# Remove solved cell values from potential solutions of cells in same grouping
-def remove_same(grouping, index, solution, solved_list, *dt):    
+def remove_same(grouping, index, solution, solved_list, *dt):
+    """Remove solved cell values from potential solutions of cells in same grouping"""
     for cell in grouping[str(index)]["squares"]:
         # Ignore solved cells
         if not cell.solution:
@@ -83,8 +85,8 @@ def remove_same(grouping, index, solution, solved_list, *dt):
                     puzzle.boxes[str(cell.box)]["unsolved"].pop(str(cell.solution), None)
                     solved_list.append(cell)    
 
-# Find unsolved group values 
-def find_unsolved(grouping, solved_list, dt, box_group = False):
+def find_unsolved(grouping, solved_list, dt, box_group=False):
+    """Find unsolved group values"""
     for key, group in grouping.items():
         # What cells can contain each unsolved value?
 
@@ -97,13 +99,13 @@ def find_unsolved(grouping, solved_list, dt, box_group = False):
                     if square not in frequency:
                         frequency.append(square)
 
-                # Remove square if previously added and: 
-                # A) value no longer possible solution or 
+                # Remove square if previously added and:
+                # A) value no longer possible solution or
                 # B) since solved
                 elif square in frequency:
                     frequency.remove(square)
 
-            # Only one cell can contain the unsolved value            
+            # Only one cell can contain the unsolved value
             if len(frequency) == 1:
                 frequency[0].solution = int(num)
                 frequency[0].possible_solutions = int(num)
@@ -148,7 +150,7 @@ def find_unsolved(grouping, solved_list, dt, box_group = False):
                 # to the number of potential containing cells.
                 if len(indices) == len(frequency):
                     for sq in frequency:
-                        to_remove = []                
+                        to_remove = []
                         for sol in sq.possible_solutions:
                             if sol not in indices:
                                 to_remove.append(sol)
@@ -161,12 +163,12 @@ def find_unsolved(grouping, solved_list, dt, box_group = False):
                 # When you know the row or column within a box where a number must appear,
                 # you know that number CAN'T appear on that row or column in neighboring boxes
                 # Example:
-                #                 2      
+                #                 2
                 #             5 7 X
                 # A B C D E F X X X
                 #             8 3 9
                 # The 2 in this bottom box MUST appear below the 5 or 7
-                # This means that 2 CANNOT appear anywhere else in the rest 
+                # This means that 2 CANNOT appear anywhere else in the rest
                 # of the row, i.e., spots A-F. Therefore, 2 must be removed
                 # as a possible solution for cells A-F.
 
@@ -179,15 +181,15 @@ def find_unsolved(grouping, solved_list, dt, box_group = False):
                     if cell.column not in cols:
                         cols.append(cell.column)
 
-                # Value for this row MUST appear in this box 
+                # Value for this row MUST appear in this box
                 if len(rows) == 1:
                     for cell in puzzle.rows[str(rows[0])]["squares"]:
                         # Ignore solved cells
                         if not cell.solution:
                             if cell.box != int(key) and int(num) in cell.possible_solutions:
                                 cell.possible_solutions.remove(int(num))
-                
-                # Value for this column MUST appear in this box                 
+
+                # Value for this column MUST appear in this box
                 if len(cols) == 1:
                     for cell in puzzle.columns[str(cols[0])]["squares"]:
                         # Ignore solved cells
@@ -195,15 +197,15 @@ def find_unsolved(grouping, solved_list, dt, box_group = False):
                             if cell.box != int(key) and int(num) in cell.possible_solutions:
                                 cell.possible_solutions.remove(int(num))
 
-# Consists of 9 rows, 9 columns, and 9 boxes, each of which contains 9 Square objects
 class Puzzle():
+    """Consists of 9 rows, 9 columns, and 9 boxes, each of which contains 9 Square objects"""
     def __init__(self):
         self.rows = {}
         self.columns = {}
         self.boxes = {}
 
-    # Add squares to puzzle class
     def create(self, puzzle_squares):
+        """Add squares to puzzle class"""
         loop = 0
         while loop < 9:
             row = {"squares": [], "unsolved": {"1": [], "2": [], "3": [], "4": [], "5": [], "6": [], "7": [], "8": [], "9": []}}
@@ -231,11 +233,11 @@ class Puzzle():
         time.sleep(0.02)
 
         # Initiate visual representation creation
-        puzz_board = pages.get_screen("puzzle").children[0]
-        Thread(target=puzz_board.create_board).start()        
+        puzz_board = app.pages.carousel.slides[2]
+        Thread(target=puzz_board.create_board).start()
 
-# Contains the row, column, and box in which the object is located, the potential solutions to the box, and the final solution once solved
 class Square(Button):
+    """Contains the row, column, and box in which the object is located, the potential solutions to the box, and the final solution once solved"""
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.ID = None
@@ -248,14 +250,17 @@ class Square(Button):
         self.background_color = "red"
 
 def change_page(new_page, *dt):
-    pages.current = new_page
+    """Change slide displayed in carousel"""
+    app.pages.carousel.load_slide(app.pages.carousel.slides[new_page])
 
 class DifficultyScreen(Widget):
+    """Widget containing difficulty selection buttons"""
     options = ObjectProperty(None)
 
     def callback(self, instance):
+        """Initiate scraping progress based on selected button"""
         # Switch screens to loading screen
-        change_page("loading")
+        change_page(1)
 
         # N.B. The scraping needs to happen on a secondary thread, otherwise
         # the scraping will happen on the main thread and will block the
@@ -266,7 +271,7 @@ class DifficultyScreen(Widget):
         # NOT like this:
         # Thread(target=functionName()).start()
         # That means that we can't pass any arguments because we do that via
-        # function/method call. We can work around this by setting the target 
+        # function/method call. We can work around this by setting the target
         # like this:
         # Thread(target=partial(functionName, passed_variables).start()
 
@@ -277,20 +282,26 @@ class DifficultyScreen(Widget):
         super().__init__(**kwargs)
         for child in self.options.children:
             child.bind(on_press=self.callback)
-    
-def change_screen(val, new_max, dt):
-    new_screen = pages.get_screen("loading").children[0]
+
+def change_load_screen(val, new_max, dt):
+    """Change loading screen text and reset progress bar value"""
+    new_screen = app.pages.carousel.slides[1]
     new_screen.ids.scraping_progress.value = 0
     new_screen.ids.scraping_progress.max = new_max
     new_screen.ids.loading_text.text = val
 
+
 def pb_update(val, dt):
-    pages.get_screen("loading").children[0].ids.scraping_progress.value=val
+    """Update progress bar value"""
+    app.pages.carousel.current_slide.ids.scraping_progress.value = val
+
 
 class LoadingScreen(Widget):
+    """Widget containing progress bar of loading process"""
     progress = ObjectProperty(None)
 
     def parse_puzzle(self, scraped, browser):
+        """Parse and format scraped puzzle information"""
         number = 0
         row = 0
         column = 0
@@ -311,15 +322,15 @@ class LoadingScreen(Widget):
                 solved.append(sq)
 
             # Increment location values as necessary
-            if not (column+1)%3:
+            if not (column+1) % 3:
                 box = box + 1
-            if column<8:
+            if column < 8:
                 column = column + 1
             else:
                 column = 0
                 row = row + 1
 
-                if row%3:
+                if row % 3:
                     box = box-3
 
             number = number + 1
@@ -331,23 +342,26 @@ class LoadingScreen(Widget):
         browser.close()
 
         # Update loading screen text
-        Clock.schedule_once(partial(change_screen, "Parsing puzzle...", 9))
+        Clock.schedule_once(partial(change_load_screen, "Parsing puzzle...", 9))
         time.sleep(0.1)
 
-        # Add scraped puzzle information to Puzzle object 
+        # Add scraped puzzle information to Puzzle object
         Thread(target=partial(puzzle.create, squares)).start()
 
+
 class PuzzleScreen(Widget):
+    """Widget containing visual representation of puzzle board"""
     board = ObjectProperty(None)
 
     def update_squares(self, square, dt, val=None):
-        if square.solution != None:
+        """Update visual square representations' text to reflect solution"""
+        if square.solution is not None:
             square.text = str(square.solution)
         if val:
             self.board.children[abs(int(val)-8)].add_widget(square)
 
-    # Create initial visual puzzle representation
     def create_board(self):
+        """Create initial visual puzzle representation"""
         progress = 1
         for key, cells in reversed(puzzle.boxes.items()):
             for cell in cells['squares']:
@@ -358,11 +372,12 @@ class PuzzleScreen(Widget):
                 progress = progress + 1
 
         # Change pages once board is created
-        Clock.schedule_once(partial(change_page, "puzzle"))
+        Clock.schedule_once(partial(change_page, 2))
 
         Thread(target=self.update).start()
 
     def update(self):
+        """Iterate through solved cells and remove their values from squares in the same row/column/box"""
         # Check for if puzzle is solved
         while len(solved) < 81:
             # Remove solved cell values from potential solutions of cells in the same row/column/box
@@ -377,43 +392,43 @@ class PuzzleScreen(Widget):
                 Clock.schedule_once(partial(remove_same, puzzle.boxes, cell.box, cell.solution, solved))
 
             # Further processing is required
-            
-            # Find unsolved row values 
+
+            # Find unsolved row values
             Clock.schedule_once(partial(find_unsolved, puzzle.rows, solved))
 
             # Find unsolved column values
             Clock.schedule_once(partial(find_unsolved, puzzle.columns, solved))
 
             # Find unsolved box values
-            Clock.schedule_once(partial(find_unsolved, puzzle.boxes, solved, box_group = True))
+            Clock.schedule_once(partial(find_unsolved, puzzle.boxes, solved, box_group=True))
 
             for key, cells in reversed(puzzle.boxes.items()):
                 for cell in cells['squares']:
                     Clock.schedule_once(partial(self.update_squares, cell))
                     time.sleep(0.02)
 
+
+class FrameScreen(Widget):
+    """Widget containing fixed header and carousel of pages"""
+    carousel = ObjectProperty(None)
+
+
 class SudokuApp(App):
+    """The Kivy application class"""
     def build(self):
-        diff_page = Screen(name="difficulty")
-        load_page = Screen(name="loading")
-        puzz_page = Screen(name="puzzle")
+        self.pages = FrameScreen()
 
-        # Initialize difficulty selection screen and add to page
+        # Initialize different screens
         diff_screen = DifficultyScreen()
-        diff_page.add_widget(diff_screen)
-
         load_screen = LoadingScreen()
-        load_page.add_widget(load_screen)
-
         puzz_screen = PuzzleScreen()
-        puzz_page.add_widget(puzz_screen)
 
-        # Add pages to screen manager
-        pages.add_widget(diff_page)
-        pages.add_widget(load_page)
-        pages.add_widget(puzz_page)
+        # Add screens to carousel
+        self.pages.carousel.add_widget(diff_screen)
+        self.pages.carousel.add_widget(load_screen)
+        self.pages.carousel.add_widget(puzz_screen)
 
-        return pages
+        return self.pages
 
 if __name__ == '__main__':
     # Initialize globals
@@ -421,13 +436,11 @@ if __name__ == '__main__':
     solved = []  # List of solved cells
     puzzle = Puzzle()  # Puzzle object
 
-    pages = ScreenManager()
-
     # Create squares list to avoid future threading problems
     for i in range(81):
         squares.append(Square())
 
-    app=SudokuApp()
+    app = SudokuApp()
     app.run()
 
 # If a cell has all but one value in the same row, column, and box, that must be the value of the cell
@@ -447,6 +460,6 @@ if __name__ == '__main__':
 # 2 C D 3 4 5 6 7 1
 # 3 6 1
 # 5 7 4
-# In the above example, A and B can both be 8 or 9, and C and D can both be 8 or 9. 
+# In the above example, A and B can both be 8 or 9, and C and D can both be 8 or 9.
 
 # TODO: implement progress bar to show percentage solved
