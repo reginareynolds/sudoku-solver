@@ -1,38 +1,38 @@
+"""
+GENERAL PROGRAM OVERVIEW
+1. Scrape sudoku puzzle from New York Times
+2. Parse scraped puzzle
+3. Create visual puzzle representation
+4. Solve for missing squares and update visual puzzle representation
+
+Rows will range in value from 0-8
+Columns will range in value from 0-8
+Boxes will range in value from 0-8
+
+Possible square solutions will depend on other squares in the same row, column, and box
+Solved cells remove their solution as a possibility from unsolved cells in the same row/column/box
+If a cell has only one possible solution, that must be the solution for that cell.
+If an unsolved value in a group (row, column, box) has only one possible group cell it can appear in, it must appear in that cell.
+If the puzzle is still not solved at that point, further processing is necessary.
+"""
+
 import os
 import time
 from functools import partial
 from threading import Thread
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from webdriver_manager.chrome import ChromeDriverManager
 
 from kivy.app import App
 from kivy.clock import Clock
 from kivy.properties import ObjectProperty
-from kivy.uix.progressbar import ProgressBar
 from kivy.uix.button import Button
-from kivy.uix.screenmanager import ScreenManager, Screen
 from kivy.uix.widget import Widget
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import WebDriverWait
+from webdriver_manager.chrome import ChromeDriverManager
 
-
-# GENERAL PROGRAM OVERVIEW
-# 1. Scrape sudoku puzzle from New York Times
-# 2. Parse scraped puzzle
-# 3. Create visual puzzle representation
-# 4. Solve for missing squares and update visual puzzle representation
-
-# Rows will range in value from 0-8
-# Columns will range in value from 0-8
-# Boxes will range in value from 0-8
-
-# Possible square solutions will depend on other squares in the same row, column, and box
-# Solved cells remove their solution as a possibility from unsolved cells in the same row/column/box
-# If a cell has only one possible solution, that must be the solution for that cell.
-# If an unsolved value in a group (row, column, box) has only one possible group cell it can appear in, it must appear in that cell.
-# If the puzzle is still not solved at that point, further processing is necessary.
 
 def scrape_puzzle(difficulty):
     """Scrape sudoku puzzle from New York Times site"""
@@ -229,7 +229,7 @@ class Puzzle():
             Clock.schedule_once(partial(pb_update, loop))
             time.sleep(.03)
 
-        Clock.schedule_once(partial(change_screen, "Creating game board...", 81))
+        Clock.schedule_once(partial(change_load_screen, "Creating game board...", 81))
         time.sleep(0.02)
 
         # Initiate visual representation creation
