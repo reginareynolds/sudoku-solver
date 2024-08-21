@@ -29,6 +29,7 @@ from kivy.uix.button import Button
 from kivy.uix.widget import Widget
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
@@ -42,12 +43,14 @@ def scrape_puzzle(difficulty):
     chrome_options.add_argument("--headless")
     chrome_options.add_argument("--log-level=3")
 
+    path = ChromeDriverManager().install()
+    chrome_service = Service(executable_path=path)
+
     # Choose URL based on selected difficulty
     site = ''.join(("https://www.nytimes.com/puzzles/sudoku/", difficulty.lower()))
 
-    path = ChromeDriverManager().install()
     # Generate puzzle by scraping NYT sudoku puzzle
-    driver = webdriver.Chrome(executable_path=path, chrome_options=chrome_options, service_log_path=os.devnull)
+    driver = webdriver.Chrome(service=chrome_service, options=chrome_options)
     driver.get(site)
 
     # Initialize variable
