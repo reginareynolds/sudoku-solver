@@ -313,7 +313,7 @@ class DifficultyScreen(Widget):
         # That means that we can't pass any arguments because we do that via
         # function/method call. We can work around this by setting the target
         # like this:
-        # Thread(target=partial(functionName, passed_variables).start()
+        # Thread(target=partial(functionName, passed_variables)).start()
 
         # Scrape puzzle of selected difficulty
         Thread(target=partial(scrape_puzzle, instance.text)).start()
