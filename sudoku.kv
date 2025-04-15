@@ -1,9 +1,14 @@
 #:kivy 1.0.9
+#:import Gradient kivy_gradient.Gradient
+#:import Color kivy.graphics.Color
+#:import Rectangle kivy.graphics.Rectangle
 
+# Individual square on the board
 <Square@Button>:
     top: root.top
     width: root.width
 
+# 3x3 grid of squares
 <Board@GridLayout>:
     top: root.top
     width: root.width
@@ -12,8 +17,20 @@
     padding: 2
     orientation: 'lr-tb'
 
+# Main frame of the app
 <FrameScreen>:
     carousel: screen_selection
+
+    # Gradient background for entire app
+    canvas:
+        Rectangle:
+            pos: self.pos
+            size: self.size
+            texture:
+                Gradient.vertical([0, 0, 0, 1], [0.067, 0.094, 0.153, 1])
+
+
+    # Header for app
     Label:
         text: "Sudoku"
         font_size: 70
@@ -30,10 +47,19 @@
             size_hint_x: None
             width: root.width
             center_x: root.width/2
-            
+
             size_hint_y: None
             height: root.top-100
-            center_y: (root.height-100)*1/2     
+            center_y: (root.height-100)*1/2
+
+    # Bottom copyright text
+    Label:
+        id: copyright
+        text: "© 2025 Regina Reynolds"
+        font_size: 20
+        center_x: root.width/2
+        top: root.top-10
+        height: 20
 
 <DifficultyScreen>:
     options: difficulty_selection
