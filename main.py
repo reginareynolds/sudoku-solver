@@ -33,7 +33,6 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
-from webdriver_manager.chrome import ChromeDriverManager
 
 
 def scrape_puzzle(difficulty):
@@ -43,14 +42,11 @@ def scrape_puzzle(difficulty):
     chrome_options.add_argument("--headless")
     chrome_options.add_argument("--log-level=3")
 
-    path = ChromeDriverManager().install()
-    chrome_service = Service(executable_path=path)
-
     # Choose URL based on selected difficulty
     site = ''.join(("https://www.nytimes.com/puzzles/sudoku/", difficulty.lower()))
 
     # Generate puzzle by scraping NYT sudoku puzzle
-    driver = webdriver.Chrome(service=chrome_service, options=chrome_options)
+    driver = webdriver.Chrome(options=chrome_options)
     driver.get(site)
 
     # Initialize variable
