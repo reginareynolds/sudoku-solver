@@ -61,33 +61,38 @@
         top: root.top-10
         height: 20
 
+
+# Difficulty selection screen
 <DifficultyScreen>:
     options: difficulty_selection
 
+    # Header for difficulty selection
     Label:
         text: "Select a difficulty"
         font_size: 50
+        color: 1, 1, 1, 1
 
         size_hint_x: None
         width: root.width*2/3
         center_x: root.width/2
-        
+
         size_hint_y: None
         height: root.top/4
         center_y: (3*root.height+60)/4
 
+    # Grid of difficulty buttons
     GridLayout:
         id: difficulty_selection
         cols: 3
-        padding: 2
-        orientation: 'lr-tb'
-        
+        spacing: 20
+        padding: 20
+
         size_hint_x: None
         width: root.width*2/3
         center_x: root.width/2
-        
+
         size_hint_y: None
-        height: (root.top-85)/4
+        height: (root.top-85)/2
         center_y: (root.height+20)/2
 
         Button:
