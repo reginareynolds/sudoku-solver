@@ -20,23 +20,22 @@
 # Main frame of the app
 <FrameScreen>:
     carousel: screen_selection
+    orientation: 'vertical'
+    md_bg_color: self.theme_cls.bg_dark
 
-    # Gradient background for entire app
-    canvas:
-        Rectangle:
-            pos: self.pos
-            size: self.size
-            texture:
-                Gradient.vertical([0, 0, 0, 1], [0.067, 0.094, 0.153, 1])
+    MDAnchorLayout:
+        anchor_x: 'center'
+        anchor_y: 'top'
 
-
-    # Header for app
-    Label:
-        text: "Sudoku"
-        font_size: 70
-        center_x: root.width/2
-        top: root.top-10
-        height: 70
+        # Header for app
+        MDLabel:
+            text: "Sudoku"
+            font_size: 70
+            halign: "center" #center_x: root.width/2
+            #top: root.top-10
+            height: 70
+            theme_text_color: "Primary"
+            #spacing: 30
 
     RelativeLayout:
         Carousel:
