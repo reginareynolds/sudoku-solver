@@ -31,11 +31,10 @@
         MDLabel:
             text: "Sudoku"
             font_size: 70
-            halign: "center" #center_x: root.width/2
-            #top: root.top-10
+            halign: "center"
+            size_hint_y: None
             height: 70
             theme_text_color: "Primary"
-            #spacing: 30
 
     RelativeLayout:
         Carousel:
@@ -51,15 +50,19 @@
             height: root.top-100
             center_y: (root.height-100)*1/2
 
-    # Bottom copyright text
-    Label:
-        id: copyright
-        text: "© 2025 Regina Reynolds"
-        font_size: 20
-        center_x: root.width/2
-        top: root.top-10
-        height: 20
+    MDAnchorLayout:
+        anchor_x: 'center'
+        anchor_y: 'bottom'
 
+        # Bottom copyright text
+        MDLabel:
+            id: copyright
+            text: "© 2025 Regina Reynolds"
+            font_size: 20
+            halign: "center"
+            size_hint_y: None
+            height: 20
+            theme_text_color: "Secondary"
 
 # Difficulty selection screen
 <DifficultyScreen>:
