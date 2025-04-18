@@ -198,6 +198,21 @@ def find_unsolved(grouping, solved_list, dt, box_group=False):
                                 cell.possible_solutions.remove(int(num))
 
 
+class DifficultyCard(MDCard):
+    difficulty_text = StringProperty(None)
+    difficulty_icon = StringProperty(None)
+    difficulty_description = StringProperty(None)
+    difficulty_color = StringProperty(None)
+
+
+class HoverCard(DifficultyCard, HoverBehavior):
+    def on_enter(self):
+        self.md_bg_color = [0, 0, 0, 0.2]
+
+    def on_leave(self):
+        self.md_bg_color = [0, 0, 0, 0.7]
+
+
 class Puzzle():
     """Consists of 9 rows, 9 columns, and 9 boxes, each of which contains 9 Square objects"""
 

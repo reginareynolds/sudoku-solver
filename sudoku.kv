@@ -2,6 +2,72 @@
 #:import Gradient kivy_gradient.Gradient
 #:import Color kivy.graphics.Color
 #:import Rectangle kivy.graphics.Rectangle
+#:import MDRaisedButton kivymd.uix.button.MDRaisedButton
+#:import MDLabel kivymd.uix.label.MDLabel
+#:import MDProgressBar kivymd.uix.progressbar.MDProgressBar
+#:import MDCard kivymd.uix.card.MDCard
+#:import MDIconButton kivymd.uix.button.MDIconButton
+
+# Difficulty card widget
+<DifficultyCard@MDCard>:
+    difficulty_text: "Placeholder"
+    difficulty_icon: "Placeholder"
+    difficulty_description: "Placeholder"
+    difficulty_color: "blue"
+
+    orientation: 'vertical'
+    adaptive_height: True
+    padding: 12
+    spacing: 12
+    size_hint: None, None
+    size: "200dp", "200dp"
+
+    style: "elevated"
+    padding: "12dp"
+    spacing: "12dp"
+
+    ripple_behavior: True
+    on_release: root.callback(self)
+    orientation: "vertical"
+    md_bg_color: root.difficulty_color
+    elevation_level: 5
+
+    # Card icon
+    MDIconButton:
+        id: difficulty_icon
+        icon: root.difficulty_icon # "grid"
+        pos_hint: {"center_x": .5}
+        theme_icon_color: "Custom"
+        icon_color: 1, 1, 1, 1
+        icon_size: "48dp"
+
+    # Difficulty label
+    MDLabel:
+        id: difficulty_text
+        text: root.difficulty_text
+        theme_text_color: "Custom"
+        text_color: 1, 1, 1, 1
+        font_style: "H5"
+        bold: True
+        halign: "center"
+        adaptive_height: True
+
+    # Difficulty description
+    MDLabel:
+        id: difficulty_description
+        text: root.difficulty_description
+        theme_text_color: "Custom"
+        text_color: .9, .9, .9, 1
+        halign: "center"
+        adaptive_height: True
+
+    # Start game button
+    MDRaisedButton:
+        text: "Start Game"
+        pos_hint: {"center_x": .5}
+        theme_text_color: "Custom"
+        text_color: 1, 1, 1, 1
+        md_bg_color: [0, 0, 0, 0.2]
 
 # Individual square on the board
 <Square@Button>:
