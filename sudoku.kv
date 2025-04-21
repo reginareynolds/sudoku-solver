@@ -61,13 +61,13 @@
         halign: "center"
         adaptive_height: True
 
-    # Start game button
-    MDRaisedButton:
-        text: "Start Game"
-        pos_hint: {"center_x": .5}
-        theme_text_color: "Custom"
-        text_color: 1, 1, 1, 1
-        md_bg_color: [0, 0, 0, 0.2]
+        # Start game button
+        MDRaisedButton:
+            text: "Start Game"
+            pos_hint: {"center_x": .5}
+            theme_text_color: "Custom"
+            text_color: 1, 1, 1, 1
+            md_bg_color: root.difficulty_color
 
 # Individual square on the board
 <Square@Button>:
