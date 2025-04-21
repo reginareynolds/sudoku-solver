@@ -32,14 +32,15 @@
     md_bg_color: root.difficulty_color
     elevation_level: 5
 
-    # Card icon
-    MDIconButton:
-        id: difficulty_icon
-        icon: root.difficulty_icon # "grid"
-        pos_hint: {"center_x": .5}
-        theme_icon_color: "Custom"
-        icon_color: 1, 1, 1, 1
-        icon_size: "48dp"
+        # Card icon
+        MDIconButton:
+            id: difficulty_icon
+            icon: root.difficulty_icon # "grid"
+            pos_hint: {"center_x": .5}
+            theme_icon_color: "Custom"
+            icon_color: 1, 1, 1, 1
+            icon_size: "48dp"
+            md_bg_color: root.difficulty_color  # Set icon background color
 
     # Difficulty label
     MDLabel:
