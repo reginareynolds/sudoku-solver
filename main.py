@@ -217,6 +217,16 @@ class HoverCard(DifficultyCard, HoverBehavior):
 
         self.style="elevated"
 
+class FocusButton(MDRaisedButton, FocusBehavior):
+    def on_enter(self):
+        self.md_bg_color = self.parent.parent.hover_color
+
+    def on_leave(self):
+        self.md_bg_color = self.parent.parent.difficulty_color
+
+    def on_blur(self):
+        # Reset to original color
+        self.md_bg_color = self.parent.parent.difficulty_color
 class Puzzle():
     """Consists of 9 rows, 9 columns, and 9 boxes, each of which contains 9 Square objects"""
 
