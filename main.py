@@ -207,11 +207,15 @@ class DifficultyCard(MDCard):
 
 class HoverCard(DifficultyCard, HoverBehavior):
     def on_enter(self):
-        self.md_bg_color = [0, 0, 0, 0.2]
+        Animation(scale_value_x=1.05, scale_value_y=1.05, scale_value_z=1.05, d=0.3).start(self)
+        self.style="outlined"
+
 
     def on_leave(self):
-        self.md_bg_color = [0, 0, 0, 0.7]
+        # Reset to original scale
+        Animation(scale_value_x=1, scale_value_y=1, scale_value_z=1, d=0.3).start(self)
 
+        self.style="elevated"
 
 class Puzzle():
     """Consists of 9 rows, 9 columns, and 9 boxes, each of which contains 9 Square objects"""
