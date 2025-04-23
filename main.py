@@ -199,21 +199,35 @@ def find_unsolved(grouping, solved_list, dt, box_group=False):
 
 
 class DifficultyCard(MDCard):
-    difficulty_text = StringProperty(None)
-    difficulty_icon = StringProperty(None)
-    difficulty_description = StringProperty(None)
-    difficulty_color = StringProperty(None)
+    # Populate with placeholder values
+    difficulty_text = StringProperty("")
+    difficulty_icon = StringProperty("")
+    difficulty_description = StringProperty("")
+    difficulty_color = StringProperty("purple")  # Must contain a color name string for initialization
+    hover_color = ObjectProperty(None)
 
 
 class HoverCard(DifficultyCard, HoverBehavior):
     def on_enter(self):
-        Animation(scale_value_x=1.05, scale_value_y=1.05, scale_value_z=1.05, d=0.3).start(self)
+        # Scale card up slightly on hover
+        scale_animation = Animation(scale_value_x=1.05, scale_value_y=1.05, scale_value_z=1.05, d=0.3)
+
+        # Change shadow offset on hover
+        shadow_animation = Animation(shadow_offset = (5, -5), d=0.3)
+
+        # Run animations in parallel
+        (scale_animation & shadow_animation).start(self)
+
         self.style="outlined"
-
-
     def on_leave(self):
-        # Reset to original scale
-        Animation(scale_value_x=1, scale_value_y=1, scale_value_z=1, d=0.3).start(self)
+        # Reset scale on hover exit
+        scale_animation = Animation(scale_value_x=1, scale_value_y=1, scale_value_z=1, d=0.3)
+
+        # Reset shadow offset on hover exit
+        shadow_animation = Animation(shadow_offset = (1, -2), d=0.3)
+
+        # Run animations in parallel
+        (scale_animation & shadow_animation).start(self)
 
         self.style="elevated"
 
