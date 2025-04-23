@@ -22,11 +22,27 @@ import time
 from functools import partial
 from threading import Thread
 
-from kivy.app import App
 from kivy.clock import Clock
-from kivy.properties import ObjectProperty
-from kivy.uix.button import Button
-from kivy.uix.widget import Widget
+from kivy.properties import ObjectProperty, StringProperty, NumericProperty
+from kivy.animation import Animation
+
+from kivymd.app import MDApp
+from kivymd.uix.button import MDRaisedButton
+from kivymd.uix.label import MDLabel
+from kivymd.uix.screen import MDScreen
+from kivymd.uix.card import MDCard
+from kivymd.uix.gridlayout import MDGridLayout
+from kivymd.uix.carousel import MDCarousel
+from kivymd.uix.progressbar import MDProgressBar
+from kivymd.uix.boxlayout import MDBoxLayout
+from kivymd.uix.relativelayout import MDRelativeLayout
+from kivymd.uix.behaviors import TouchBehavior
+from kivymd.uix.behaviors import HoverBehavior
+from kivymd.uix.behaviors import ScaleBehavior
+from kivymd.uix.behaviors.focus_behavior import FocusBehavior
+from kivymd.uix.behaviors import CommonElevationBehavior
+from kivymd.theming import ThemeManager
+
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
@@ -205,6 +221,13 @@ class DifficultyCard(MDCard):
     difficulty_description = StringProperty("")
     difficulty_color = StringProperty("purple")  # Must contain a color name string for initialization
     hover_color = ObjectProperty(None)
+
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.focus_behavior=True
+        self.md_bg_color = self.difficulty_color
+
 
 
 class HoverCard(DifficultyCard, HoverBehavior):
@@ -493,8 +516,13 @@ class FrameScreen(Widget):
     carousel = ObjectProperty(None)
 
 
-class SudokuApp(App):
-    """The Kivy application class"""
+class SudokuApp(MDApp):
+    """The KivyMD application class"""
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.theme_cls.theme_style = "Dark"
+        self.theme_cls.primary_palette = "Red"
+        self.theme_cls.material_style = "M3"
 
     def build(self):
         self.pages = FrameScreen()
@@ -518,11 +546,15 @@ if __name__ == '__main__':
     solved = []  # List of solved cells
     puzzle = Puzzle()  # Puzzle object
 
+    # # Create squares list to avoid future threading problems
+    # for i in range(81):
+    #     squares.append(Square())
+
+    app = SudokuApp()
     # Create squares list to avoid future threading problems
     for i in range(81):
         squares.append(Square())
 
-    app = SudokuApp()
     app.run()
 
 # If a cell has all but one value in the same row, column, and box, that must be the value of the cell

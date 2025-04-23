@@ -10,65 +10,91 @@
 
 # Difficulty card widget
 <DifficultyCard@MDCard>:
-    difficulty_text: "Placeholder"
-    difficulty_icon: "Placeholder"
-    difficulty_description: "Placeholder"
-    difficulty_color: "blue"
-
     orientation: 'vertical'
     adaptive_height: True
-    padding: 12
-    spacing: 12
     size_hint: None, None
     size: "200dp", "200dp"
 
     style: "elevated"
-    padding: "12dp"
-    spacing: "12dp"
+    padding: ["0dp", "15dp", "0dp", "0dp"]  # Give top padding
 
-    ripple_behavior: True
+    #ripple_behavior: True
     on_release: root.callback(self)
-    orientation: "vertical"
+    theme_background_color: "Custom"
     md_bg_color: root.difficulty_color
-    elevation_level: 5
+
+    theme_shadow_color: "Custom "
+    shadow_color: root.difficulty_color
+    # theme_bg_color: "Custom"
+    # md_bg_color: "white"
+    # md_bg_color_disabled: "grey"
+    theme_shadow_offset: "Custom"
+    shadow_offset: (1, -2)
+    theme_shadow_softness: "Custom"
+    shadow_softness: 1
+    theme_elevation_level: "Custom"
+    elevation_level: 2
+
+    # Box layout to leave a color strip at the top of the card
+    MDBoxLayout:
+        orientation: "vertical"
+        size_hint: None, None
+        size: "200dp", "200dp"
+        md_bg_color: app.theme_cls.bg_dark
+        padding: "12dp"
+        spacing: "12dp"
+
+        radius:[0, 0, 16.0, 16.0]  # Give rounded corners to bottom of box layout to align with card
 
         # Card icon
         MDIconButton:
             id: difficulty_icon
-            icon: root.difficulty_icon # "grid"
+            icon: root.difficulty_icon
             pos_hint: {"center_x": .5}
             theme_icon_color: "Custom"
             icon_color: 1, 1, 1, 1
-            icon_size: "48dp"
+            icon_size: "30dp"
             md_bg_color: root.difficulty_color  # Set icon background color
 
-    # Difficulty label
-    MDLabel:
-        id: difficulty_text
-        text: root.difficulty_text
-        theme_text_color: "Custom"
-        text_color: 1, 1, 1, 1
-        font_style: "H5"
-        bold: True
-        halign: "center"
-        adaptive_height: True
+        # Difficulty label
+        MDLabel:
+            id: difficulty_text
+            text: root.difficulty_text
+            theme_text_color: "Custom"
+            text_color: 1, 1, 1, 1
+            font_style: "H5"
+            bold: True
+            halign: "center"
+            adaptive_height: True
 
-    # Difficulty description
-    MDLabel:
-        id: difficulty_description
-        text: root.difficulty_description
-        theme_text_color: "Custom"
-        text_color: .9, .9, .9, 1
-        halign: "center"
-        adaptive_height: True
+        # Difficulty description
+        MDLabel:
+            id: difficulty_description
+            text: root.difficulty_description
+            theme_text_color: "Custom"
+            text_color: .9, .9, .9, 1
+            halign: "center"
+            adaptive_height: True
 
         # Start game button
-        MDRaisedButton:
+        FocusButton:
             text: "Start Game"
             pos_hint: {"center_x": .5}
             theme_text_color: "Custom"
             text_color: 1, 1, 1, 1
             md_bg_color: root.difficulty_color
+            unfocus_color: root.difficulty_color
+            focus_color: root.hover_color
+
+            #radius: ["3dp]
+
+<HoverCard@DifficultyCard+HoverBehavior>:
+    # on_enter: self.md_bg_color = [0, 0, 0, 0.2]
+    # on_leave: self.md_bg_color = [0, 0, 0, 0.7]
+
+<FocusButton+FocusBehavior>:
+
+
 
 # Individual square on the board
 <Square@Button>:
@@ -90,17 +116,18 @@
     orientation: 'vertical'
     md_bg_color: self.theme_cls.bg_dark
 
+    # Header for app
     MDAnchorLayout:
         anchor_x: 'center'
         anchor_y: 'top'
 
-        # Header for app
+        # Header label
         MDLabel:
             text: "Sudoku"
             font_size: 70
             halign: "center"
             size_hint_y: None
-            height: 70
+            height: 75
             theme_text_color: "Primary"
 
     RelativeLayout:
@@ -117,18 +144,19 @@
             height: root.top-100
             center_y: (root.height-100)*1/2
 
+    # Footer for app
     MDAnchorLayout:
         anchor_x: 'center'
         anchor_y: 'bottom'
 
-        # Bottom copyright text
+        # Footer label
         MDLabel:
-            id: copyright
+            id: footer
             text: "© 2025 Regina Reynolds"
             font_size: 20
             halign: "center"
             size_hint_y: None
-            height: 20
+            height: 25
             theme_text_color: "Secondary"
 
 # Difficulty selection screen
@@ -136,45 +164,51 @@
     options: difficulty_selection
 
     # Header for difficulty selection
-    Label:
+    MDLabel:
         text: "Select a difficulty"
         font_size: 50
-        color: 1, 1, 1, 1
-
+        halign: "center"
         size_hint_x: None
         width: root.width*2/3
         center_x: root.width/2
-
         size_hint_y: None
         height: root.top/4
         center_y: (3*root.height+60)/4
+        theme_text_color: "Primary"
 
-    # Grid of difficulty buttons
-    GridLayout:
+    # Grid of difficulty cards
+    MDGridLayout:
         id: difficulty_selection
         cols: 3
-        spacing: 20
-        padding: 20
+        spacing: "24dp"
+        padding: "24dp"
+        size_hint: (0.8, None)
+        height: self.minimum_height
+        pos_hint: {"center_x": 0.5, "center_y": 0.5}
 
-        size_hint_x: None
-        width: root.width*2/3
-        center_x: root.width/2
+        # Easy card
+        HoverCard:
+            difficulty_text: "Easy"
+            difficulty_icon: "grid"
+            difficulty_description: "Perfect for beginners"
+            difficulty_color: "darkgreen"
+            hover_color: [0.647, 0.839, 0.655, 1.0]  # Light green
 
-        size_hint_y: None
-        height: (root.top-85)/2
-        center_y: (root.height+20)/2
+        # Medium card
+        HoverCard:
+            difficulty_text: "Medium"
+            difficulty_icon: "brain"
+            difficulty_description: "A balanced challenge"
+            difficulty_color: "orange"
+            hover_color: [1.0, 0.8, 0.502, 1.0]  # Light orange
 
-        Button:
-            text: "Easy"
-            font_size: self.height/4
-    
-        Button:
-            text: "Medium"
-            font_size: self.height/4
-
-        Button:
-            text: "Hard"
-            font_size: self.height/4
+        # Hard card
+        HoverCard:
+            difficulty_text: "Hard"
+            difficulty_icon: "trophy"
+            difficulty_description: "For Sudoku experts"
+            difficulty_color: "darkred"
+            hover_color: [0.937, 0.604, 0.604, 1.0]  # Light red
 
 <LoadingScreen>:
     progress: scraping_progress
