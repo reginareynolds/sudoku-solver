@@ -131,21 +131,18 @@
             padding: 15
             halign: "center"
             theme_text_color: "Primary"
+            md_bg_color: "green"
 
-    RelativeLayout:
-        Carousel:
+    # Main content area
+    MDBoxLayout:
+        orientation: "vertical"
+        size_hint_y: 0.9
+
+        # Screen carousel
+        MDCarousel:
             id: screen_selection
             direction: "right"
             scroll_timeout: 0
-
-            size_hint_x: None
-            width: root.width
-            center_x: root.width/2
-
-            size_hint_y: None
-            height: root.top-100
-            center_y: (root.height-100)*1/2
-
     # Footer for app
     MDAnchorLayout:
         anchor_x: 'center'
@@ -161,12 +158,14 @@
             padding: 5
             halign: "center"
             theme_text_color: "Secondary"
+            md_bg_color: "green"
 
 # Difficulty selection screen
 <DifficultyScreen>:
     options: difficulty_selection
     orientation: "vertical"
     size_hint: 1, 1
+    md_bg_color: "blue"
 
     # Header for difficulty selection
     MDLabel:

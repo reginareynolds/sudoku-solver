@@ -255,11 +255,33 @@ class HoverCard(DifficultyCard, HoverBehavior):
         self.style="elevated"
 
 class FocusButton(MDRaisedButton, FocusBehavior):
-    def on_enter(self):
-        self.md_bg_color = self.parent.parent.hover_color
+    def callback(self, instance):
+        """Initiate scraping progress based on selected card"""
+        # Get the difficulty level from the card's label
+        difficulty = self.parent.parent.difficulty_text
 
-    def on_leave(self):
-        self.md_bg_color = self.parent.parent.difficulty_color
+        # Switch screens to loading screen
+        change_page(1)
+
+        # N.B. The scraping needs to happen on a secondary thread, otherwise
+        # the scraping will happen on the main thread and will block the
+        # screens from changing until AFTER the processing completes. The
+        # Thread target has to be a function/method, NOT a function/method CALL.
+        # That means that the target needs to look like this:
+        # Thread(target=functionName).start()
+        # NOT like this:
+        # Thread(target=functionName()).start()
+        # That means that we can't pass any arguments because we do that via
+        # function/method call. We can work around this by setting the target
+        # like this:
+        # Thread(target=partial(functionName, passed_variables)).start()
+
+        # Scrape puzzle of selected difficulty
+        Thread(target=partial(scrape_puzzle, difficulty)).start()
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.bind(on_release=self.callback)
 
     def on_blur(self):
         # Reset to original color
@@ -403,6 +425,7 @@ def pb_update(val, dt):
 class LoadingScreen(Widget):
     """Widget containing progress bar of loading process"""
     progress = ObjectProperty(None)
+    loading_text = StringProperty("Scraping puzzle...")
 
     def parse_puzzle(self, scraped, browser):
         """Parse and format scraped puzzle information"""
@@ -446,7 +469,8 @@ class LoadingScreen(Widget):
         browser.close()
 
         # Update loading screen text
-        Clock.schedule_once(partial(change_load_screen, "Parsing puzzle...", 9))
+        self.loading_text = "Parsing puzzle..."
+        Clock.schedule_once(partial(change_load_screen, self.loading_text, 9))
         time.sleep(0.1)
 
         # Add scraped puzzle information to Puzzle object
@@ -512,7 +536,7 @@ class PuzzleScreen(Widget):
                     time.sleep(0.02)
 
 
-class FrameScreen(Widget):
+class FrameScreen(MDBoxLayout):
     """Widget containing fixed header and carousel of pages"""
     carousel = ObjectProperty(None)
 
