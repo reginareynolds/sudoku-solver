@@ -355,12 +355,15 @@ def change_page(new_page, *dt):
     app.pages.carousel.load_slide(app.pages.carousel.slides[new_page])
 
 
-class DifficultyScreen(MDBoxLayout): #Screen):
+class DifficultyScreen(MDBoxLayout):
     """Widget containing difficulty selection cards"""
     options = ObjectProperty(None)
 
     def callback(self, instance):
-        """Initiate scraping progress based on selected button"""
+        """Initiate scraping progress based on selected card"""
+        # Get the difficulty level from the card's label
+        difficulty = instance.children[2].text  # The H5 label containing difficulty text
+
         # Switch screens to loading screen
         change_page(1)
 
@@ -378,12 +381,10 @@ class DifficultyScreen(MDBoxLayout): #Screen):
         # Thread(target=partial(functionName, passed_variables)).start()
 
         # Scrape puzzle of selected difficulty
-        Thread(target=partial(scrape_puzzle, instance.text)).start()
+        Thread(target=partial(scrape_puzzle, difficulty)).start()
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        for child in self.options.children:
-            child.bind(on_press=self.callback)
 
 
 def change_load_screen(val, new_max, dt):

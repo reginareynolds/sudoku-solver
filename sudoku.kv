@@ -86,7 +86,6 @@
             unfocus_color: root.difficulty_color
             focus_color: root.hover_color
 
-            #radius: ["3dp]
 
 <HoverCard@DifficultyCard+HoverBehavior>:
     # on_enter: self.md_bg_color = [0, 0, 0, 0.2]
@@ -180,20 +179,24 @@
         theme_text_color: "Primary"
         md_bg_color: "blue"
 
+    # TODO: Add padding to the top and bottom of the grid. Set a maximum column width so that the cards aren't so far apart when the screen is resized.
     # Grid of difficulty cards
     MDGridLayout:
         id: difficulty_selection
         cols: 3
         orientation: "lr-tb"
-        spacing: "12dp"
-        padding: "24dp"
-        size_hint: (0.8, 1)
+        #spacing: "12dp"
+        size_hint: (0.8,1) # (0.8, 1)
         pos_hint: {"center_x": 0.5}
         md_bg_color: "red"
-        #col_default_width: (self.width)/3
+        col_default_width: (self.width)/3
+        cols_minimum: {0:200, 1:200, 2:200}  # Set minimum width for each column to card width
+        padding: 0#(self.width-600)/4 #"30dp"
+        spacing: (self.width-600)/6  # (Width of grid - (# of cards * width of a card))/(# of cards * 2) Divide width by 6 to get spacing when no padding
 
         # Easy card
         HoverCard:
+            #size: self.parent.width/3 - (self.parent.padding[0]*2 + self.parent.spacing[0])/1.5
             difficulty_text: "Easy"
             difficulty_icon: "grid"
             difficulty_description: "Perfect for beginners"
