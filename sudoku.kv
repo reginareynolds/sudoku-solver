@@ -120,14 +120,17 @@
     MDAnchorLayout:
         anchor_x: 'center'
         anchor_y: 'top'
+        size_hint_y: None
+        height: 100  # 70 font size + 30 padding
 
         # Header label
         MDLabel:
             text: "Sudoku"
+            font_style: "H3"
+            bold: True
             font_size: 70
+            padding: 15
             halign: "center"
-            size_hint_y: None
-            height: 75
             theme_text_color: "Primary"
 
     RelativeLayout:
@@ -148,15 +151,16 @@
     MDAnchorLayout:
         anchor_x: 'center'
         anchor_y: 'bottom'
+        size_hint_y: None
+        height: 30 # 20 font size + 10 padding
 
         # Footer label
         MDLabel:
             id: footer
             text: "© 2025 Regina Reynolds"
             font_size: 20
+            padding: 5
             halign: "center"
-            size_hint_y: None
-            height: 25
             theme_text_color: "Secondary"
 
 # Difficulty selection screen
