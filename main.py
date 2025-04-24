@@ -355,8 +355,8 @@ def change_page(new_page, *dt):
     app.pages.carousel.load_slide(app.pages.carousel.slides[new_page])
 
 
-class DifficultyScreen(Widget):
-    """Widget containing difficulty selection buttons"""
+class DifficultyScreen(MDBoxLayout): #Screen):
+    """Widget containing difficulty selection cards"""
     options = ObjectProperty(None)
 
     def callback(self, instance):

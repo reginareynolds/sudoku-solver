@@ -166,29 +166,31 @@
 # Difficulty selection screen
 <DifficultyScreen>:
     options: difficulty_selection
+    orientation: "vertical"
+    size_hint: 1, 1
 
     # Header for difficulty selection
     MDLabel:
         text: "Select a difficulty"
         font_size: 50
+        padding: 5
         halign: "center"
-        size_hint_x: None
-        width: root.width*2/3
-        center_x: root.width/2
-        size_hint_y: None
-        height: root.top/4
-        center_y: (3*root.height+60)/4
+
+        adaptive_height: True
         theme_text_color: "Primary"
+        md_bg_color: "blue"
 
     # Grid of difficulty cards
     MDGridLayout:
         id: difficulty_selection
         cols: 3
-        spacing: "24dp"
+        orientation: "lr-tb"
+        spacing: "12dp"
         padding: "24dp"
-        size_hint: (0.8, None)
-        height: self.minimum_height
-        pos_hint: {"center_x": 0.5, "center_y": 0.5}
+        size_hint: (0.8, 1)
+        pos_hint: {"center_x": 0.5}
+        md_bg_color: "red"
+        #col_default_width: (self.width)/3
 
         # Easy card
         HoverCard:
