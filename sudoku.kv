@@ -177,9 +177,8 @@
 
         adaptive_height: True
         theme_text_color: "Primary"
-        md_bg_color: "blue"
 
-    # TODO: Add padding to the top and bottom of the grid. Set a maximum column width so that the cards aren't so far apart when the screen is resized.
+    # TODO: Set a maximum column width so that the cards aren't so far apart when the screen is resized.
     # Grid of difficulty cards
     MDGridLayout:
         id: difficulty_selection
@@ -191,7 +190,7 @@
         md_bg_color: "red"
         col_default_width: (self.width)/3
         cols_minimum: {0:200, 1:200, 2:200}  # Set minimum width for each column to card width
-        padding: 0#(self.width-600)/4 #"30dp"
+        padding: 0, (self.height - 215)/2  # (Height of grid - (height of card + height of card padding))/2
         spacing: (self.width-600)/6  # (Width of grid - (# of cards * width of a card))/(# of cards * 2) Divide width by 6 to get spacing when no padding
 
         # Easy card
