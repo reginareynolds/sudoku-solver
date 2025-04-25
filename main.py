@@ -422,7 +422,7 @@ def pb_update(val, dt):
     app.pages.carousel.current_slide.ids.scraping_progress.value = val
 
 
-class LoadingScreen(Widget):
+class LoadingScreen(MDBoxLayout):
     """Widget containing progress bar of loading process"""
     progress = ObjectProperty(None)
     loading_text = StringProperty("Scraping puzzle...")

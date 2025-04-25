@@ -184,7 +184,7 @@
         cols: 3
         orientation: "lr-tb"
         #spacing: "12dp"
-        size_hint: (0.8,1) # (0.8, 1)
+        size_hint: (0.8, 1)
         pos_hint: {"center_x": 0.5}
         md_bg_color: "red"
         col_default_width: (self.width)/3
@@ -217,30 +217,42 @@
             difficulty_color: "darkred"
             hover_color: [0.937, 0.604, 0.604, 1.0]  # Light red
 
+
+# TODO: When horizontally resizing the progress bar page, the difficulty selection screen becomes visible.
 <LoadingScreen>:
     progress: scraping_progress
+    loading_text: "Scraping puzzle..."
+    orientation: "vertical"
+    size_hint: 1, 1
 
-    Label:
+    # Loading screen label
+    MDLabel:
         id: loading_text
-        text: "Scraping puzzle..."
+        text: root.loading_text
         font_size: 50
+        padding: 5
+        halign: "center"
 
-        size_hint_x: None
-        width: root.width*2/3
-        center_x: root.width/2
+        adaptive_height: True
+        theme_text_color: "Primary"
 
-        size_hint_y: None
-        height: root.top/4
-        center_y: (3*root.height+60)/4
-        
+    # Loading screen progress bar grid layout for centering
+    MDGridLayout:
+        rows: 1
+        size_hint: (0.8, 1)
+        pos_hint: {"center_x": 0.5}
+        md_bg_color: "purple"
+        rows_minimum: {0: 4}  # Set minimum height to the height of the progress bar
+        padding: 0, (self.height-4)/2  # (Height of grid - height of progress bar)/2
 
-    ProgressBar:
-        id: scraping_progress
-        size_hint_x: None
-        width: root.width*2/3
-        center_x: root.width/2
-        center_y: (root.height+20)/2
-        max: 81
+        # Loading screen progress bar
+        MDProgressBar:
+            id: scraping_progress
+            size_hint: (0.8, None)
+            pos_hint: {"center_x": 0.5}
+            height: "4dp"
+            max: 81
+            color: app.theme_cls.accent_color
 
 <PuzzleScreen>:
     board: boxes
