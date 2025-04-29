@@ -1,9 +1,14 @@
 #:kivy 1.0.9
+#:import Gradient kivy_gradient.Gradient
+#:import Color kivy.graphics.Color
+#:import Rectangle kivy.graphics.Rectangle
 
+# Individual square on the board
 <Square@Button>:
     top: root.top
     width: root.width
 
+# 3x3 grid of squares
 <Board@GridLayout>:
     top: root.top
     width: root.width
@@ -12,9 +17,20 @@
     padding: 2
     orientation: 'lr-tb'
 
-<DifficultyScreen>:
-    options: difficulty_selection
+# Main frame of the app
+<FrameScreen>:
+    carousel: screen_selection
 
+    # Gradient background for entire app
+    canvas:
+        Rectangle:
+            pos: self.pos
+            size: self.size
+            texture:
+                Gradient.vertical([0, 0, 0, 1], [0.067, 0.094, 0.153, 1])
+
+
+    # Header for app
     Label:
         text: "Sudoku"
         font_size: 70
@@ -23,91 +39,107 @@
         height: 70
 
     RelativeLayout:
-
-        Label:
-            text: "Select a difficulty"
-            font_size: 50
+        Carousel:
+            id: screen_selection
+            direction: "right"
+            scroll_timeout: 0
 
             size_hint_x: None
-            width: root.width*2/3            
+            width: root.width
             center_x: root.width/2
-            
+
             size_hint_y: None
-            height: root.top/4
-            center_y: (root.height-80)*3/4
+            height: root.top-100
+            center_y: (root.height-100)*1/2
 
-        GridLayout:
-            id: difficulty_selection
-            cols: 3
-            padding: 2
-            orientation: 'lr-tb'
-            
-            size_hint_x: None
-            width: root.width*2/3            
-            center_x: root.width/2
-            
-            size_hint_y: None
-            height: (root.top-85)/4
-            center_y: (root.height-80)*1/2
+    # Bottom copyright text
+    Label:
+        id: copyright
+        text: "© 2025 Regina Reynolds"
+        font_size: 20
+        center_x: root.width/2
+        top: root.top-10
+        height: 20
 
-            Button:
-                text: "Easy"
-        
-            Button:
-                text: "Medium"
 
-            Button:
-                text: "Hard"
+# Difficulty selection screen
+<DifficultyScreen>:
+    options: difficulty_selection
+
+    # Header for difficulty selection
+    Label:
+        text: "Select a difficulty"
+        font_size: 50
+        color: 1, 1, 1, 1
+
+        size_hint_x: None
+        width: root.width*2/3
+        center_x: root.width/2
+
+        size_hint_y: None
+        height: root.top/4
+        center_y: (3*root.height+60)/4
+
+    # Grid of difficulty buttons
+    GridLayout:
+        id: difficulty_selection
+        cols: 3
+        spacing: 20
+        padding: 20
+
+        size_hint_x: None
+        width: root.width*2/3
+        center_x: root.width/2
+
+        size_hint_y: None
+        height: (root.top-85)/2
+        center_y: (root.height+20)/2
+
+        Button:
+            text: "Easy"
+            font_size: self.height/4
+    
+        Button:
+            text: "Medium"
+            font_size: self.height/4
+
+        Button:
+            text: "Hard"
+            font_size: self.height/4
 
 <LoadingScreen>:
     progress: scraping_progress
 
     Label:
-        text: "Sudoku"
-        font_size: 70
+        id: loading_text
+        text: "Scraping puzzle..."
+        font_size: 50
+
+        size_hint_x: None
+        width: root.width*2/3
         center_x: root.width/2
-        top: root.top-10
-        height: 70
 
-    RelativeLayout:
+        size_hint_y: None
+        height: root.top/4
+        center_y: (3*root.height+60)/4
+        
 
-        Label:
-            id: loading_text
-            text: "Scraping puzzle..."
-            font_size: 50
-
-            size_hint_x: None
-            width: root.width*2/3
-            center_x: root.width/2
-
-            size_hint_y: None
-            height: root.top/4
-            center_y: (root.height-80)*3/4
-            
-
-        ProgressBar:
-            id: scraping_progress
-            size_hint_x: None
-            width: root.width*2/3
-            center_x: root.width/2
-            center_y: (root.top-80)*1/2 #*3/4-80
-            max: 81
+    ProgressBar:
+        id: scraping_progress
+        size_hint_x: None
+        width: root.width*2/3
+        center_x: root.width/2
+        center_y: (root.height+20)/2
+        max: 81
 
 <PuzzleScreen>:
     board: boxes
 
-    Label:
-        text: "Sudoku"
-        font_size: 70
-        center_x: root.width/2
-        top: root.top-10
-        height: 70
-        
     Board:
         id: boxes
-        top: root.top - 80
+        top: root.top
         width: root.width
-        row_default_height: (root.top-90)/3
+        row_default_height: (root.top-10)/3
         padding: 5
 
         Board:
