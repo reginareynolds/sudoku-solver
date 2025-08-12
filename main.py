@@ -27,21 +27,26 @@ from kivy.properties import ObjectProperty, StringProperty, NumericProperty
 from kivy.animation import Animation
 
 from kivymd.app import MDApp
-from kivymd.uix.button import MDRaisedButton
+from kivymd.uix.button import MDRaisedButton, MDRectangleFlatButton
 from kivymd.uix.label import MDLabel
 from kivymd.uix.screen import MDScreen
+from kivymd.uix.screenmanager import MDScreenManager
 from kivymd.uix.card import MDCard
 from kivymd.uix.gridlayout import MDGridLayout
 from kivymd.uix.carousel import MDCarousel
 from kivymd.uix.progressbar import MDProgressBar
 from kivymd.uix.boxlayout import MDBoxLayout
 from kivymd.uix.relativelayout import MDRelativeLayout
+from kivymd.uix.floatlayout import MDFloatLayout
 from kivymd.uix.behaviors import TouchBehavior
 from kivymd.uix.behaviors import HoverBehavior
 from kivymd.uix.behaviors import ScaleBehavior
 from kivymd.uix.behaviors.focus_behavior import FocusBehavior
 from kivymd.uix.behaviors import CommonElevationBehavior
 from kivymd.theming import ThemeManager
+from kivymd.uix.widget import MDWidget
+
+# from kivy_gradient import Gradient
 
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -93,7 +98,7 @@ def remove_same(grouping, index, solution, solved_list, *dt):
                 if len(cell.possible_solutions) == 1:
                     cell.solution = int(cell.possible_solutions[0])
                     cell.possible_solutions = int(cell.possible_solutions[0])
-                    cell.background_color = "green"
+                    cell.md_bg_color = "green"
                     cell.text = str(cell.solution)
 
                     # Remove newly solved cell value from grouping's unsolved value list
@@ -127,7 +132,7 @@ def find_unsolved(grouping, solved_list, dt, box_group=False):
             if len(frequency) == 1:
                 frequency[0].solution = int(num)
                 frequency[0].possible_solutions = int(num)
-                frequency[0].background_color = "green"
+                frequency[0].md_bg_color = "green"
                 frequency[0].text = str(frequency[0].solution)
                 solved_list.append(frequency[0])
 
@@ -357,19 +362,43 @@ class Puzzle():
         Thread(target=puzz_board.create_board).start()
 
 
-class Square(Button):
+class Square(MDLabel): #RaisedButton, TouchBehavior):
     """Contains the object's row, column, and box locations, potential solutions, and the final solution once solved"""
+    ID = NumericProperty(None)
+    row = NumericProperty(None)
+    column = NumericProperty(None)
+    box = NumericProperty(None)
+    solution = NumericProperty(None)
+    possible_solutions = ObjectProperty([1, 2, 3, 4, 5, 6, 7, 8, 9])
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.ID = None
-        self.row = None
-        self.column = None
-        self.box = None
-        self.possible_solutions = [1, 2, 3, 4, 5, 6, 7, 8, 9]
-        self.solution = None
         self.text = "X"
-        self.background_color = "red"
+        self.md_bg_color = "red"
+        # self.elevation_normal = 2
+        # self.elevation_pressed = 4
+        self.size_hint = (1, 1)  # Make it relative to the parent's size
+        # self.bind(size=self.on_resize)  # Bind to resize events
+    # def on_touch_down(self, touch):
+    #     # if self.collide_point(*touch.pos):
+    #         # self.elevation_normal = 4
+    #         # self.elevation_pressed = 6
+    #     return super().on_touch_down(touch)
+
+    # def on_touch_up(self, touch):
+    #     if self.collide_point(*touch.pos):
+    #         self.elevation_normal = 2
+    #         self.elevation_pressed = 4
+    #     return super().on_touch_up(touch)
+
+    # def on_resize(self, instance, value):
+    #     # Determine the smaller dimension of the parent
+    #     available_width = self.parent.width
+    #     available_height = self.parent.height
+    #     smallest_dimension = min(available_width, available_height)
+
+    #     # Set the widget's size to match the smallest available dimension
+    #     self.size = (smallest_dimension, smallest_dimension)
 
 
 def change_page(new_page, *dt):
@@ -445,7 +474,7 @@ class LoadingScreen(MDBoxLayout):
             if cell.accessible_name != "empty":
                 sq.solution = int(cell.accessible_name)
                 sq.possible_solutions = int(cell.accessible_name)
-                sq.background_color = "green"  # Set solved square color to green
+                #sq.md_bg_color = "green"  # Set solved square color to green
                 solved.append(sq)
 
             # Increment location values as necessary
@@ -477,7 +506,7 @@ class LoadingScreen(MDBoxLayout):
         Thread(target=partial(puzzle.create, squares)).start()
 
 
-class PuzzleScreen(Widget):
+class PuzzleScreen(MDBoxLayout): #Widget):
     """Widget containing visual representation of puzzle board"""
     board = ObjectProperty(None)
 
@@ -561,7 +590,7 @@ class SudokuApp(MDApp):
         self.pages.carousel.add_widget(diff_screen)
         self.pages.carousel.add_widget(load_screen)
         self.pages.carousel.add_widget(puzz_screen)
-
+        self.pages.carousel.add_widget(Square())
         return self.pages
 
 
